@@ -1,0 +1,40 @@
+---
+title: "Exercícios 1 - Modelos ARIMA"
+subtitle: "Exercícios adaptados do capítulo 5 - livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Exercícios
+
+1 - Escreva os seguintes modelos na forma $\phi(B)Z_t = a_t,$ ou $Z_t = \theta(B)a_t,$ ou
+$\phi(B)Z_t = \theta(B)a_t.$
+
+b.  $$\tilde{Z}_t = a_t + 0.8 a_{t-1}$$
+
+c.  $$\tilde{Z}_t = 0.3 \tilde{Z}_{t-1} -  0.6 \tilde{Z}_{t-2} + a_t$$
+
+d.  $$\tilde{Z}_t - 0.4 \tilde{Z}_{t-1} = a_t  - 0.3 a_{t-1} + 0.8 a_{t-2}$$
+
+e.  $$Z_t = 1.5 Z_{t-1} - 0.75 Z_{t-2} + a_t + 4.0$$
+
+f.  $$\tilde{Z}_t  = 0.3 a_{t-1} + 0.6 a_{t-2} + a_t.$$
+
+---
+class: middle
+##Exercícios
+
+2 - Verifique se cada um dos modelos do Problema 1 é: 
+a) estacionário b) invertível. Justifique a sua resposta
+
+

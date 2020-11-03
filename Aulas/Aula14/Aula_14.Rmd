@@ -1,0 +1,475 @@
+---
+title: "Aula 14 - Trabalho de Modelos de Suavização Exponencial"
+subtitle: 
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+class: middle, inverse, center
+#Métodos de suavização
+
+
+---
+class: middle, 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(httr)
+library(xlsx)
+library(fpp2)
+library(forecast)
+library(tsibble)
+library(TTR)
+library(forecast)
+```
+
+
+##Métodos de suavização exponencial simples (SES)
+
+$$\bar{Z}_t = \alpha Z_t + (1 - \alpha) \bar{Z}_{t-1}, \phantom{111} \bar{Z_0} = Z_1, \phantom{111} t = 1, \ldots, N.$$
+
+- Quanto menor for o valor de $\alpha$ mais estáveis serão as previsões finais, uma vez que a utilização de baixo valor de $\alpha$ implica que pesos maiores serão dados as observações passadas.
+
+- Valores de $\alpha$ baixo, indicado para séries altamente aleatórias.
+
+####Previsão
+
+$$\hat{Z}_t(h) = \bar{Z}_t.$$
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+
+\begin{align}
+\bar{Z}_t =& AZ_t + (1-A)(\bar{Z}_{t-1} +\hat{T}_{t-1}), \phantom{11} 0 < A < 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N, \\
+\bar{T}_t =& C(\bar{Z}_t - \bar{Z}_{t-1}) + (1-C)\hat{T}_{t-1}, \phantom{11} 0 < C < 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N.
+\end{align}
+em que $A$ e $C$ são constantes de suavização.
+
+
+####Previsão
+
+$$\hat{Z}_{t + h} = \bar{Z}_t + h \hat{T}_t, \forall h > 0,$$
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Multiplicativa 
+
+\begin{align}
+\hat{F}_t =& D\left(\frac{Z_t}{\bar{Z}_t}\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 < D < 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\bar{Z}_t =& A\left(\frac{Z_t}{\hat{F}_{t-s}}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 < A < 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\hat{T}_t =& C(\bar{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{111}, 0 < C < 1, \phantom{111} t = s+1, \ldots, N.
+\end{align}
+
+####Previsão - Série Sazonal Multiplicativa
+
+
+$$\hat{Z}_{t+h} = (\bar{Z}_t + h\hat{T}_t)\hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s$$
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Aditiva
+
+\begin{align}
+\hat{F}_t =& D\left(Z_t - \bar{Z}_t\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 < D < 1, \phantom{11} t = s + 1, \ldots, N. \\
+\bar{Z}_t =& A\left(Z_t - \hat{F}_{t-s}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 < A < 1, \phantom{11} t = s + 1, \ldots, N. \\
+\hat{T}_t =& C(\hat{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{11} 0 < C < 1, \phantom{11} t = s+1, \ldots, N.
+\end{align}
+
+####Previsão - Série Sazonal Aditiva
+
+$$\hat{Z}_{t+h} = \bar{Z}_t + h\hat{T}_t + \hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s.$$
+
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+- Vamos aplicar o método de médias móveis à série $A_6$ $NO_2$, no período de primeiro de janeiro a 18 de abril de 1997.
+
+- Vamos prever os valores de 19 a 30 de abril de 1997.
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/poluicao.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+datNO2 = ts(dat$no2[1:108], frequency=365)
+
+datNO2_tst = dat$no2[109:120]
+
+
+plot.ts(datNO2)
+```
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.01)
+
+MSE = list()
+
+for(i in 1:length(alpha.val)){
+  SES = HoltWinters(datNO2, beta=FALSE, gamma=FALSE, alpha=alpha.val[i])
+  MSE[[i]]=  mean( c(as.vector(forecast(SES,h=12)$mean) - datNO2_tst)^2)
+ }
+
+alpha.opt = alpha.val[ which.min(unlist(MSE))]
+
+```
+
+
+---
+class: middle
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.01)
+
+MSE = list()
+
+for(i in 1:length(alpha.val)){
+  SES = HoltWinters(datNO2, beta=FALSE, gamma=FALSE, alpha=alpha.val[i])
+  MSE[[i]]=  mean( c(as.vector(forecast(SES,h=12)$mean) - datNO2_tst)^2)
+ }
+
+alpha.opt = alpha.val[ which.min(unlist(MSE))]
+
+head(data.frame(alpha.val, round(unlist(MSE),2)))
+
+
+```
+
+
+---
+class: middle
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+mod <- HoltWinters(datNO2, alpha =alpha.opt, gamma = FALSE, beta = FALSE)
+
+plot(mod)
+lines(fitted(mod)[,1], col = 3)
+
+```
+
+
+Valor de alpha `r alpha.opt`
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+forecast(mod , h=12) %>% autoplot
+
+```
+  
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+forecast(mod , h=12) %>% autoplot
+
+```
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+- Vamos analisar a série $A_{10}$ (M-ICV), índice de custo de vida no município de São Paulo; que originalmente possui observações mensais de janeiro de 1970 a junho de 1980.
+
+- Por questões didáticas, vamos analisar a série no período de janeiro de 1970 (t=1) a junho de 1979 (t=114), ou seja, isolamos as 12 ultimas observações com o objetivo de comparar as previsões com os respectivos valores reais.
+
+---
+class: middle
+
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+datM_ICV = ts(dat$ICV[1:114], c(1970,1), frequency=12)
+
+datM_ICV_tst = dat$ICV[115:126]
+
+```
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+autoplot(datM_ICV)
+
+```
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+
+alphaBeta.grid = expand.grid(alpha.val,beta.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBeta.grid )){
+  SEH = HoltWinters(datM_ICV, beta=alphaBeta.grid[i,2], gamma=FALSE, alpha=alphaBeta.grid[i,1])
+  MSE[[i]]=  mean( c(as.vector(forecast(SEH,h=12)$mean) - datM_ICV_tst)^2)
+ }
+
+alphaBeta.opt = alphaBeta.grid[ which.min(unlist(MSE)), ]
+
+```
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+
+alphaBeta.grid = expand.grid(alpha.val,beta.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBeta.grid )){
+  SEH = HoltWinters(datM_ICV, beta=alphaBeta.grid[i,2], gamma=FALSE, alpha=alphaBeta.grid[i,1])
+  MSE[[i]]=  mean( c(as.vector(forecast(SEH,h=12)$mean) - datM_ICV_tst)^2)
+ }
+
+alphaBeta.opt = alphaBeta.grid[ which.min(unlist(MSE)), ]
+
+
+head(data.frame(alphaBeta.grid, round(unlist(MSE),2)))
+
+
+```
+
+
+
+
+---
+class: middle
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+mod <- HoltWinters(datM_ICV, alpha =alphaBeta.opt[1,1], gamma = FALSE, beta = alphaBeta.opt[1,2])
+
+plot(mod)
+lines(fitted(mod)[,1], col = 3)
+
+```
+
+
+Valor de alpha `r alphaBeta.opt`
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+forecast(mod , h=12) %>% autoplot
+
+```
+  
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+forecast(mod , h=12) %>% autoplot
+```
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r,  warning=FALSE, message=FALSE}
+
+x = c(7.78,7.351,8.317,8.036, 8.424,8.3,8.985, 8.589, 8.564,8.614, 8.102,8.044,
+      8.209, 7.738, 8.828, 9.150,8.960, 9.282, 9.934, 9.546, 9.572, 10.272, 9.991, 9.537,
+      8.761, 8.501, 9.642, 9.058, 9.256, 9.799, 10.828, 11.063, 10.652, 11.278, 10.661, 10.500,
+      9.759, 9.876, 10.664,10.110, 11.055,11.615, 11.730, 12.587,12.046, 12.852, 12.259, 12.214,
+      11.798, 11.278, 11.945, 11.695, 12.734, 13.405, 13.836, 14.388, 14.069, 15.519, 14.680, 14.104,
+      13.577, 12.451, 13.856, 13.812, 14.280, 13.692, 15.502, 15.423, 14.947, 16.031,14.462, 13.791,
+      14.829, 15.297, 16.330, 15.807, 16.623, 17.196, 17.691, 18.012, 17.625, 18.244, 17.102, 16.744,
+      15.385, 15.062, 17.896, 16.262, 17.820, 17.911, 17.818, 18.410, 17.658, 18.273, 17.922, 16.987,
+      16.681, 15.886, 18.281, 17.478, 18.412, 18.849, 19.023, 20.372, 19.262, 20.570, 19.304, 18.407,
+      18.633, 17.497, 19.470, 18.884, 20.308, 20.146, 20.258, 21.614, 19.717, 22.133, 20.503, 18.800,
+      19.577, 18.992, 21.022, 19.064,21.067, 21.553, 22.513)
+
+datM_IPI = ts(x[1:115], c(1969,1), frequency=12)
+
+datM_IPI_tst = x[116:127]
+
+```
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+autoplot(datM_IPI)
+
+```
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+gamma.val = seq(0.1,0.9, by=0.05)
+
+alphaBetaGamma.grid = expand.grid(alpha.val,beta.val, gamma.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBetaGamma.grid )){
+  HW= HoltWinters(datM_IPI, beta=alphaBetaGamma.grid[i,2], gamma=alphaBetaGamma.grid[i,3], alpha=alphaBetaGamma.grid[i,1],
+                    seasonal = c("multiplicative"))
+  MSE[[i]]=  mean( c(as.vector(forecast(HW,h=12)$mean) - datM_IPI_tst)^2)
+ }
+
+alphaBetaGamma.opt = alphaBetaGamma.grid[ which.min(unlist(MSE)), ]
+
+head(data.frame(alphaBetaGamma.opt, round(unlist(MSE),2)))
+
+
+```
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+gamma.val = seq(0.1,0.9, by=0.05)
+
+alphaBetaGamma.grid = expand.grid(alpha.val,beta.val, gamma.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBetaGamma.grid )){
+  HW= HoltWinters(datM_IPI, beta=alphaBetaGamma.grid[i,2], gamma=alphaBetaGamma.grid[i,3], alpha=alphaBetaGamma.grid[i,1],
+                    seasonal = c("multiplicative"))
+  MSE[[i]]=  mean( c(as.vector(forecast(HW,h=12)$mean) - datM_IPI_tst)^2)
+ }
+
+alphaBetaGamma.opt = alphaBetaGamma.grid[ which.min(unlist(MSE)), ]
+
+head(data.frame(alphaBetaGamma.opt, round(unlist(MSE),2)))
+
+
+```
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+mod <- HoltWinters(datM_IPI, alpha =alphaBetaGamma.opt[1,1], gamma = alphaBetaGamma.opt[1,3], beta = alphaBetaGamma.opt[1,2], seasonal=c("multiplicative"))
+
+plot(mod)
+lines(fitted(mod)[,1], col = 3)
+
+```
+
+
+Valor de alpha `r alphaBetaGamma.opt`
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+forecast(mod, h=12) %>% autoplot
+
+```
+  
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+forecast(mod, h=12) %>% autoplot
+```

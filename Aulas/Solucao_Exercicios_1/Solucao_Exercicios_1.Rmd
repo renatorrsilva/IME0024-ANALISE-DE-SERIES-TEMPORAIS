@@ -1,0 +1,151 @@
+---
+title: "Solução dos Exercícios 1 - Modelos ARIMA"
+subtitle: "Exercícios adaptados do capítulo 5 - livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Exercícios
+
+1 - Escreva os seguintes modelos na forma $\phi(B)Z_t = a_t,$ ou $Z_t = \theta(B)a_t,$ ou
+$\phi(B)Z_t = \theta(B)a_t.$
+
+b.  $$\tilde{Z}_t = a_t + 0.8 a_{t-1}$$
+
+--
+
+$$\tilde{Z}_t = a_t + 0.8 B a_t$$
+--
+
+$$\tilde{Z}_t = (1 + 0.8 B) a_t$$
+
+
+---
+class: middle
+##Exercícios
+
+
+c.  $$\tilde{Z}_t = 0.3 \tilde{Z}_{t-1} -  0.6 \tilde{Z}_{t-2} + a_t$$
+
+--
+
+$$\tilde{Z}_t - 0.3 \tilde{Z}_{t-1} +  0.6 \tilde{Z}_{t-2}  = a_t$$
+
+--
+
+$$\tilde{Z}_t - 0.3 B \tilde{Z}_{t} +  0.6 B^2 \tilde{Z}_{t}  = a_t$$
+
+--
+
+$$(1 - 0.3 B  +  0.6 B^2) \tilde{Z}_{t}  = a_t$$
+
+
+
+---
+class: middle
+##Exercícios
+
+
+d.  $$\tilde{Z}_t - 0.4 \tilde{Z}_{t-1} = a_t  - 0.3 a_{t-1} + 0.8 a_{t-2}$$
+
+--
+
+$$\tilde{Z}_t - 0.4 B  \tilde{Z}_t = a_t - 0.3 B a_t + 0.8 B^2 a_t  $$
+
+--
+
+$$(1 - 0.4 B ) \tilde{Z}_t = (1 - 0.3 B  + 0.8 B^2) a_t  $$
+
+
+
+---
+class: middle
+##Exercícios
+
+
+e.  $$Z_t = 1.5 Z_{t-1} - 0.75 Z_{t-2} + a_t + 4.0$$
+
+
+--
+
+$$Z_t = 1.5 B Z_t - 0.75 B^2 Z_t + a_t + 4.0$$
+
+--
+
+$$Z_t = 1.5 B Z_t - 0.75 B^2 Z_t + a_t + 4.0$$
+
+--
+
+$$Z_t - 1.5 B Z_t + 0.75 B^2 Z_t = a_t + 4.0$$
+
+
+--
+
+$$(1 - 1.5 B  + 0.75 B^2) Z_t = a_t + 4.0$$
+
+
+
+
+
+---
+class: middle
+##Exercícios
+
+
+f.  $$\tilde{Z}_t  = 0.3 a_{t-1} + 0.6 a_{t-2} + a_t.$$
+
+
+--
+
+$$\tilde{Z}_t  = 0.3 B a_{t} + 0.6 B^2 a_{t} + a_t.$$
+
+--
+
+$$\tilde{Z}_t  = (1 + 0.3 B + 0.6 B^2)a_t.$$
+
+
+---
+class: middle
+##Exercícios
+
+2 - Verifique se cada um dos modelos do Problema 1 é: 
+a) estacionário b) invertível. Justifique a sua resposta
+
+###Condições de Estacionariedade
+ 
+ - Modelos de médias móveis são estacionários, e modelos autoregressivos são estacionários se as raízes do polinômio $\phi(B) = 0$ cair fora do círculo unitário
+ 
+ - Para o $AR(1)$, isso equivale à $-1 < \phi < 1$ e $AR(2)$ isso equivale à $\phi_1 + \phi_2 < 1,$ $\phi_2 - \phi_1 < 1,$ $-1 < \phi_2 < 1.$
+
+###Condições de Invertibildidade
+
+- Modelos autoregressivos são sempre invertíveis. Modelos de médias móveis são invertíveis se as raízes do polinômio $\theta(B) = 0$ cair fora do círculo unitário.  Para o $MA(1)$, isso equivale à $-1 < \theta < 1$ e $AR(2)$ isso equivale à $\theta_1 + \theta_2 < 1,$ $\theta_2 - \theta_1 < 1,$ $-1 < \theta_2 < 1.$
+
+
+---
+class: middle
+##Exercícios
+
+2 - Verifique se cada um dos modelos do Problema 1 é: 
+
+
+b.  Estacionário e Invertível
+
+c.  Invertível e Estacionário  
+
+d.  Estacionário e Invertível  
+
+e.  Não Estacionário e Invertível
+
+f.  Estacionário e Invertível
+

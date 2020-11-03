@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 10 - Modelos de Suavização Exponencial</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 10 - Modelos de Suavização Exponencial
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-09-16)
+
+---
+
+class: middle, inverse, center
+#Métodos de suavização
+
+
+---
+class: middle, 
+
+##Revisão - Aulas passadas
+
+
+
+####Tendência: (Rob Hyndman)
+
+-  Uma mudança a longo prazo no nível da série. Crescimento ou descrescimento [curso](https://github.com/robjhyndman/ETC3550Slides/raw/fable/2-tsgraphics.pdf). 
+
+
+Modelo de decomposição de séries temporal sem levar em consideração o componente sazonal.
+
+`$$Z_t = T_t + a_t.$$`
+
+####Métodos para Estimar Tendência: (Morretin &amp; Toloi 2004)
+
+- Ajuste de uma função no tempo (polinômios, exponenciais e etc);
+
+- Filtrar os valores da série ao redor de um ponto (médias móveis centradas);
+
+- Suavisar os valores da série através de um ajuste de regressão loess.
+
+---
+class: middle, 
+##Métodos de Suavização - Introdução (Morettin &amp; Toloi 2004)
+
+- A maioria dos métodos de previsão baseia-se na ideia de que observações passadas contêm informações sobre o padrão de comportamento da série temporal.
+
+- O propósito dos métodos é distinguir o padrão de qualquer ruído que possa estar contido nas observações e então usar esse padrão para prever valores futuros da série.
+
+- Uma grande classe de métodos de previsão, que tenta tratar ambas as causas de flutuações em séries de tempo, é das suavizações.
+
+- Técnicas específicas desse tipo assumem que os valores de extremos da série representam a aleatoriedade e, assim, por meio da suavização desses extremos, pode-se identificar o padrão básico. 
+
+
+---
+class: middle
+
+##Modelos para séries localmente constantes 
+
+- Vamos considerar, nesta seção, o caso de uma série temporal `\(Z_1, \ldots, Z_N,\)` localmente composta de seu nível mais um ruído aleatório, isto é,
+
+`$$Z_t = \mu_t + a_t, \phantom{11} t = 1, \ldots, N,$$`
+em que `\(E[a_t] = 0\)`, `\(Var[a_t] = \sigma^2_a\)` e `\(\mu_t\)` é um parâmetro desconhecido, que pode variar lentamente com o tempo.
+
+- [Outras explicações](http://www.math.hkbu.edu.hk/~hpeng/Math4826/Chapter3.pdf)
+
+- [Outras explicações](http://www.imm.dtu.dk/~hmad/time.series.analysis/slides/lect03.pdf)
+
+---
+class: middle
+
+###Média móveis simples - Forma recursiva
+
+`$$M_t = \frac{Z_t + Z_{t-1} + \ldots + Z_{t-r+1}}{r} = \frac{1}{r}\sum_{k=0}^{r-1} Z_{t-k},$$`
+
+Usando a expressão anterior temos
+
+`$$M_{t-1} = \frac{Z_{t-1} + Z_{t-2} + \ldots + Z_{t-r}}{r}$$`
+Logo,
+
+--
+`$$M_t = \frac{Z_t + Z_{t-1} + \ldots + Z_{t-r+1}}{r}$$`
+--
+`$$= \frac{Z_t}{r} + \frac{Z_{t-1} + Z_{t-2} + \ldots + Z_{t-r+1}}{r} +\frac{Z_{t-r}}{r} -  \frac{Z_{t-r}}{r}$$`
+
+--
+`$$=\frac{Z_t- Z_{t-r}}{r} + \frac{Z_{t-1} + Z_{t-2} + \ldots + Z_{t-r}}{r}$$`
+
+--
+`$$=\frac{Z_t - Z_{t-r}}{r} + M_{t-1}$$`
+
+
+---
+class: middle
+##Previsão
+
+- A previsão de todos os valores futuros é dada pela última média móvel calculada, isto é, 
+
+`$$\hat{Z}_{t+h} =  M_t = \frac{1}{r}\sum_{k=0}^{r-1}\mu_{t-k}, \phantom{111} \forall \phantom{|} h &gt; 0.$$`
+
+ou
+
+`$$\hat{Z}_{t+h}  = \hat{Z}_{t+h-1}  + \frac{Z_t - Z_{t-r}}{r}, \phantom{11} h &gt; 0.$$` 
+
+- Essa equação pode ser interpretada como um mecanismo de atualização de previsão, pois a cada instante corrige a estimativa prévia de `\(\hat{Z}_{t+h}.\)`
+
+####Média de Previsão 
+
+`$$E[\hat{Z}_{t+h} ] = E\left(\frac{1}{r}\sum_{k=0}^{r-1} Z_{t-k}\right) = \frac{1}{r}\sum_{k=0}^{r-1} \mu_{t-k}.$$`
+
+
+
+---
+class: middle
+##Erro quadrático médio de previsão
+
+--
+`$$\mbox{EQM}[\hat{Z}_{t+h} ] = E\left[Z_{t+h} - \hat{Z}_{t+h}\right]^2$$`
+
+--
+`$$E\left[ Z_{t+h} - \sum_{k=0}^{r-1} \frac{Z_{t-k}}{r}\right]^2$$`
+
+--
+`$$E\left[ Z_{t} - \sum_{k=0}^{r-h-1} \frac{Z_{t-h-k}}{r}\right]^2$$`
+--
+`$$E[Z_t^2] - \frac{2}{r} \sum_{k=0}^{r-h-1} E[Z_t Z_{t-h-k}] +\frac{1}{r^2}\sum_{k=0}^{r-h-1}\sum_{j=0}^{r-h-1}E[Z_{t-h-k} Z_{t-h-j}]$$`
+
+--
+`$$=\gamma_t(0) - \frac{2}{r}\sum_{k=0}^{r-h-1} \gamma_t(h + k) +
+\frac{1}{r^2} \sum_{k=0}^{r-h-1} \sum_{j=0}^{r-h-1}  \gamma_{t-h-k}(j - k)$$`
+
+em que `\(\gamma_t(h) = E[Z_t Z_{t-h}] = Cov(Z_t,Z_{t-h-k}) + \mu_t\mu_{t-h-k}, \phantom{111} \forall \phantom{|} h &gt; 0.\)`
+
+---
+class: middle
+
+###Caso particular:  Modelo com média globalmente constante
+
+`$$Z_t = \mu + a_t,$$`
+
+- Nesse caso, temos:
+
+`$$E[\hat{Z}_{t+h}] = \frac{1}{r}\sum_{k=0}^{r-1}\mu = \mu$$`
+e  variância é dada por:
+
+`$$Var[\hat{Z}_{t+h}] = Var\left(\sum_{k=0}^{r-1} \frac{Z_{t-k}}{r}\right) = \frac{\sigma_a^2}{r}.$$`
+
+##Intervalo de Confiança
+
+- Assumindo `\(a_t \sim N(0, \sigma^2_{a})\)`, pode-se afirmar que `\(\hat{Z}_{t+h} \sim N(\mu, \frac{\sigma^2_{a}}{r})\)`, podemos construir um intervalo de confiança dado por:
+
+`$$\left(\hat{Z}_{t+h} - z_{tab} \frac{\sigma_{a}}{\sqrt{r}}; \hat{Z}_{t+h}  + z_{tab} \frac{\sigma_{a}}{\sqrt{r}}\right).$$`
+
+---
+class: middle
+##Determinação de `\(r\)`
+
+- As propriedades do método dependem do número de observações utilizadas na média (valor de `\(r\)`).
+
+- Um valor grande de `\(r\)` faz com que a previsão acompanhe lentamente as mudanças do parâmetro `\(\mu_t\)`.
+
+- Um valor pequeno implica numa reação mais rápida.
+
+####Casos extremos:
+
+- `\(r=1\)`, então o valor mais recente da série é utilizado como previsão de todos os valores futuros ("método ingênuo");
+
+- `\(r=N\)`, então a previsão será igual a média aritmética de todos os dados observados. Este caso só é indicado quando a série é altamente aleatória.
+
+
+---
+class: middle
+##Procedimento objetivo
+
+- Um procedimento objetivo é selecionar o valor de `\(r\)` que fornece a "melhor previsão" a um passo das observações já obtidas ("backforecasting"), ou seja, 
+
+- Encontrar o valor de `\(r\)` que minimize 
+
+`$$S = \sum_{t=l+1}^N(Z_t - \hat{Z}_{t-1}(1))^2,$$`
+em que `\(l\)` é escolhido de tal modo que o valor inicial utilizado em `\(M_t = \frac{Z_t - Z_{t-r}}{r} + M_{t-1}\)` não influencie a previsão.
+
+---
+class: middle
+##Vantagens e desvantagens do método (Morettin)
+
+###Vantagens
+
+- simples aplicação;
+
+- é aplicável quando se tem um número pequeno de observações;
+
+- permite uma flexibilidade grande devido à variação de `\(r\)` de acordo com o padrão da série.
+
+###Desvantagens
+
+- necessidade de armazenar pelo menos `\((r-1)\)` observações;
+
+- dificuldade em determinar o valor de `\(r\)`.
+
+###Obs:
+
+- Na prática, o método de móveis não é utilizado frequentemente.
+
+---
+class: middle
+##Métodos de médias móveis - Aplicação
+
+- Vamos aplicar o método de médias móveis à série `\(A_6\)` CO, no período de primeiro de janeiro a 30 de abril de 1997.
+
+- Vamos ajustar esse modelo utilizando `\(r=7, r=14\)` e `\(r=21.\)`
+
+- Para cada ajuste vamos calcular o erro quadrático médio.
+
+---
+class: middle
+##Métodos de médias móveis - Aplicação
+
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Métodos de médias móveis - Aplicação
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+####Métodos de médias móveis - Aplicação
+
+
+
+```
+##      dados      mm7     mm14     mm21
+## 106 3.4371 3.574686 3.228657 3.023419
+## 107 4.9329 3.924286 3.268964 3.167029
+## 108 4.6571 4.008571 3.279979 3.312333
+## 109 4.0743 3.851229 3.363143 3.451995
+## 110 4.0457 4.061629 3.530793 3.563357
+## 111 2.4914 3.843457 3.549586 3.533662
+## 112 2.5914 3.747129 3.571321 3.451143
+## 113 2.7029 3.642243 3.608464 3.366519
+## 114 3.3229 3.412243 3.668264 3.316724
+## 115 5.4240 3.521800 3.765186 3.360586
+## 116 3.5767 3.450714 3.650971 3.392333
+## 117 1.7600 3.124186 3.592907 3.395257
+## 118 4.3857 3.394800 3.619129 3.497990
+## 119 4.3286 3.642971 3.695050 3.595205
+## 120 4.4614 3.894186 3.768214 3.703705
+```
+                         
+####Valores de EQM 
+
+- `\(r=7\)`, (0.6944032);
+
+- `\(r=14\)`, (0.7177941);
+
+- `\(r=21\)`, (0.7179445);
+
+
+
+---
+class: middle
+##Métodos de suavização exponencial simples (SES)
+
+###Motivação 
+
+- O método de médias móveis considera todas as observações (recentes e mais remotas) com o mesmo peso. 
+
+###Definição do método
+
+####Suavizador Ponderado exponencialmente
+
+`$$\sum_{k=0}^{N-1} \theta^k Z_{N-k} = Z_N+ \theta Z_{N-1} + \theta^2 Z_{N-2} + \ldots +
+\theta^{N-1} Z_1.$$`
+em que `\(-1 &lt; \theta &lt; 1\)` [progressão geométrica](https://www.mathsisfun.com/algebra/sequences-sums-geometric.html).
+
+- Perceba que nesse suavizador, observações recentes tem um peso maior que observações passadas.
+
+- Perceba também que a soma dos pesos é uma soma de progressão geométrica
+`\(\sum_{k=0}^{N-1} \theta^k = \frac{1 - \theta^N}{1 - \theta}\)` que não necessariamente soma 1.
+
+
+---
+class: middle
+##Métodos de suavização exponencial simples (SES)
+
+- Para resolver esse problema, multiplicamos `\(\sum_{k=0}^{N-1} \theta^k\)` por `\(\frac{1 - \theta}{1 - \theta^N}\)`. No entanto, para valores de `\(N\)` suficientemente grandes, `\(\theta^N \rightarrow 0\)`, logo `\(\frac{1 - \theta}{1 - \theta^N} \rightarrow (1 - \theta).\)`
+
+- Assim temos
+
+--
+`$$\bar{Z}_N = (1 - \theta) \sum_{t=0}^{N-1} \theta^t Z_{N-t}$$` 
+
+--
+`$$= (1 - \theta)(Z_N + \theta Z_{N-1} + \theta^2 Z_{N-2} + \ldots + \theta ^{N-1}Z_1)$$`
+--
+`$$= (1 - \theta)Z_N + \theta (1 - \theta)(Z_{N-1} + \theta Z_{N-2} + \ldots + \theta ^{N-2}Z_1)$$`
+
+--
+`$$= (1 - \theta)Z_N +  \theta \bar{Z}_{N-1}.$$`
+
+Fazendo `\(\alpha = (1 - \theta)\)` e generalizando para um `\(t=1,\ldots, N\)`, temos `\(\bar{Z}_t = \alpha Z_t +  (1 - \alpha) \bar{Z}_{t-1},\)` em que `\(\bar{Z}_0 = Z_1.\)`
+
+---
+class: middle
+##Métodos de suavização exponencial simples (SES)
+
+###Procedimento
+
+`$$\bar{Z}_t = \alpha Z_t + (1 - \alpha) \bar{Z}_{t-1}, \phantom{111} \bar{Z_0} = Z_1, \phantom{111} t = 1, \ldots, N.$$`
+ou
+
+`$$\bar{Z}_t = \alpha \sum_{k=0}^{t-1} (1 - \alpha)^k  Z_{t-k} + (1-\alpha)^t\bar{Z}_0,  \phantom{111} t = 1, \ldots, N.$$`
+
+- Observe que  `\(\bar{Z}_1 = \alpha Z_1 + (1 - \alpha) \bar{Z}_{0} \Rightarrow  \alpha Z_1 + (1 - \alpha) Z_1 = Z_1\)`,  portanto, `\(\bar{Z_0} = \bar{Z_1} = Z_1.\)` [somatório](https://math.stackexchange.com/questions/35080/upper-limit-of-summation-index-lower-than-lower-limit), [somatório2](https://pt.wikipedia.org/wiki/Somat%C3%B3rio).
+
+
+
+###Efetuando a expressão anterior temos
+
+`$$\bar{Z}_t = \alpha Z_t + \alpha(1 - \alpha) Z_{t-1} + \alpha (1  - \alpha)^2 Z_{t - 2} + \ldots + \alpha(1 - \alpha)^{t-1} Z_{1} + (1 - \alpha)^{t}\bar{Z}_0,$$`
+o que significa que a SES é uma média ponderada que dá pesos maiores às observações mais recentes, o que é uma vantagem ao método de médias móveis.
+
+
+---
+class: middle
+###Previsão
+
+`$$\hat{Z}_{t+h}  = \bar{Z}_t, \phantom{111} \forall h &gt; 0,$$`
+
+`$$\hat{Z}_{t+h} =  \alpha Z_t + (1 - \alpha) \hat{Z}_{t+h-1},$$`
+
+Pode-se provar que para `\(h=1\)`, tem-se
+
+`$$\hat{Z}_{t+1} = \alpha e_t + \hat{Z}_t,$$`
+em que `\(e_t = Z_t - \hat{Z}_{t}\)`.
+
+
+---
+class: middle
+###Demonstração:
+
+--
+`$$\hat{Z}_{t+1} = \alpha Z_t + (1 - \alpha) \hat{Z}_{t}$$`
+--
+`$$= \alpha Z_t - \alpha \hat{Z}_{t} + \hat{Z}_{t}$$`
+--
+`$$= \alpha (Z_t - \hat{Z}_{t}) + \hat{Z}_{t}$$`
+
+--
+`$$= \alpha e_t + \hat{Z}_{t}$$`
+
+
+- Assim, a nova previsão pode ser obtida da anterior, adicionando-se um múltiplo do erro de previsão, indicando que a previsão está sempre alerta a mudanças no nível de série, revelada pelo erro de previsão.
+
+---
+class: middle
+##Previsão - Propriedades
+
+###Valor Esperado
+
+--
+`$$E[\hat{Z}_{t+h}] = E[\alpha \sum_{k=0}^{t-1} (1 - \alpha)^k  Z_{t-k} + (1-\alpha)^t\bar{Z}_0]$$`
+--
+`$$=\alpha \sum_{k=0}^{t-1} (1 - \alpha)^k E[Z_{t-k}] + (1-\alpha)^t E[\bar{Z}_0]$$`
+
+--
+`$$\approx  \alpha \sum_{k=0}^{t-1} (1 - \alpha)^k \mu_{t-k}$$`
+
+---
+class: middle
+###Erro Quadrático Médio da Previsão
+
+--
+`$$\mbox{EQM}[\hat{Z}_{t+h} ] = E\left[Z_{t+h} - \hat{Z}_{t+h}\right]^2 = E\left[ Z_{t+h} -  \alpha\sum_{k=0}^{t-1} (1 - \alpha)^k Z_{t-k} \right]^2$$`
+
+
+--
+`$$= E\left[ Z_{t} - \alpha\sum_{k=0}^{t-h-1} (1 - \alpha)^k Z_{t-h-k}\right]^2$$`
+--
+`$$= E[Z_t^2] - 2\alpha \sum_{k=0}^{t-h-1}(1-\alpha)^k E[Z_t Z_{t-h-k}] +\alpha^2\sum_{k=0}^{t-h-1}\sum_{j=0}^{t-h-1}(1 - \alpha)^{k+j} E[Z_{t-h-j} Z_{t-h-k}]$$`
+
+--
+`$$=\gamma_t(0) - 2\alpha\sum_{k=0}^{t-h-1}(1-\alpha)^k \gamma_t(h + k) +
+\alpha^2\sum_{k=0}^{t-h-1}\sum_{j=0}^{t-h-1}(1 - \alpha)^{k+j}  \gamma_{t-h-k}(j - k)$$`
+
+
+
+---
+class: middle
+###Determinação da constante `\(\alpha\)` (Morettin)
+
+- Quanto menor for o valor de `\(\alpha\)` mais estáveis serão as previsões finais, uma vez que a utilização de baixo valor de `\(\alpha\)` implica que pesos maiores serão dados as observações.
+
+- Consequentemente, qualquer flutuação aleatória, no presente, exercerá um peso menor no cálculo da previsão.
+
+- Em geral, quanto mais aleatória for a série  estudada, menores serão os valores da constante de suavização.
+
+- O efeito de `\(\alpha\)` grande ou pequeno é completamente análogo (em direção oposta) ao efeito do parâmetro `\(r\)` no método de MMS.
+
+- Um procedimento mais objetivo é selecionar o valor que fornece a "melhor previsão" das observações já obtidas.
+
+---
+class: middle
+
+###Vantagens da SES
+
+- fácil de entendimento;
+
+- grande flexibildiade permitida pela variação da constante de suavização 
+- necessidade de armazenar somente `\(Z_t\)`, `\(\bar{Z}_t\)` e `\(\alpha\)`
+
+###Desvantagens da SES
+
+- A principal desvantagem é a dificuldade em determinar o valor mais apropriado da constante de suavização.
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+- Vamos aplicar o método de médias móveis à série `\(A_6\)` `\(NO_2\)`, no período de primeiro de janeiro a 30 de abril de 1997.
+
+- Vamos ajustar esse modelo utilizando `\(\alpha = 0.5502\)`. 
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Métodos suavização exponencial simples  - Aplicação
+
+
+
+```
+##           Point Forecast     Lo 80    Hi 80    Lo 95    Hi 95
+## 1997.3288       161.1957 113.63479 208.7567 88.45755 233.9339
+## 1997.3315       161.1957 106.91121 215.4802 78.17473 244.2167
+## 1997.3342       161.1957 100.93318 221.4583 69.03212 253.3593
+## 1997.3370       161.1957  95.49687 226.8946 60.71800 261.6735
+## 1997.3397       161.1957  90.47723 231.9142 53.04112 269.3503
+```
+                         
+[Explicação da previsão](https://otexts.com/fpp2/ses.html)
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt
+
+- Holt (1957) estendeu a suavização exponencial simples para permitir a previsão de dados com uma tendência. 
+
+- Esse método envolve uma equação de previsão e duas equações de suavização (uma para o nível e outra para a tendência)
+
+- Os valores do nível e da tendência da série, no instante t, serão estimados por:
+
+`\begin{align}
+\bar{Z}_t =&amp; AZ_t + (1-A)(\bar{Z}_{t-1} +\hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N, \\
+\bar{T}_t =&amp; C(\bar{Z}_t - \bar{Z}_{t-1}) + (1-C)\hat{T}_{t-1}, \phantom{11} 0 &lt; C &lt; 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N.
+\end{align}`
+em que `\(A\)` e `\(C\)` são constantes de suavização.
+
+- Essas fórmulas como em todos os métodos de suavização, modificam estimativas prévias quando uma nova observação é obtida.
+
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt
+
+
+##Previsão
+
+`$$\hat{Z}_{t + h} = \bar{Z}_t + h \hat{T}_t, \forall h &gt; 0,$$`
+ou seja, a previsão é feita adicionando-se ao valor básico. `\((\bar{Z}_t)\)` a tendência multiplicada pelo número de passos à frente que se deseja prever `\((h)\)`.
+
+
+###Determinação das constantes de suavização
+
+- Escolher valores de (A,C) que minimizem o erro quadrático de previsão ("backforecasting")
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt - Aplicação
+
+- Vamos analisar a série `\(A_{10}\)` (M-ICV), índice de custo de vida no município de São Paulo; que originalmente possui observações mensais de janeiro de 1970 a junho de 1980.
+
+- Por questões didáticas, vamos analisar a série no período de janeiro de 1970 (t=1) a junho de 1979 (t=114), ou seja, isolamos as 12 ultimas observações com o objetivo de comparar as previsões com os respectivos valores reais.
+
+
+
+---
+class: middle
+###Método de suavização exponencial de Holt - Aplicação
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Método de suavização exponencial de Holt - Aplicação
+
+
+```
+##          Point Forecast     Lo 80     Hi 80     Lo 95     Hi 95
+## Jul 1979       801.1481  796.3320  805.9643  793.7824  808.5138
+## Aug 1979       825.2611  817.8484  832.6738  813.9244  836.5978
+## Sep 1979       849.3740  839.2229  859.5252  833.8492  864.8989
+## Oct 1979       873.4870  860.4152  886.5588  853.4954  893.4786
+## Nov 1979       897.5999  881.4194  913.7804  872.8540  922.3458
+## Dec 1979       921.7128  902.2389  941.1868  891.9300  951.4957
+## Jan 1980       945.8258  922.8794  968.7722  910.7323  980.9192
+## Feb 1980       969.9387  943.3475  996.5299  929.2710 1010.6065
+## Mar 1980       994.0517  963.6496 1024.4537  947.5557 1040.5476
+## Apr 1980      1018.1646  983.7917 1052.5375  965.5957 1070.7335
+## May 1980      1042.2776 1003.7793 1080.7758  983.3996 1101.1555
+## Jun 1980      1066.3905 1023.6177 1109.1633 1000.9752 1131.8058
+```
+
+---
+class: middle
+###Método de suavização exponencial de Holt - Aplicação
+
+![](Aula_10_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+#Métodos de suavização para séries sazonais
+
+- Para séries temporais que apresentam um padrão de comportamento mais complexo, existem outras formas de suavização
+
+- Nessa aula veremos o método de Holt-Winters.
+
+Winters, P. R. (1960). Forecasting sales by exponentially weighted moving averages. Management Science, 6, 324–342. (https://doi.org/10.1287/mnsc.6.3.324)
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Multiplicativa 
+
+`\begin{align}
+\hat{F}_t =&amp; D\left(\frac{Z_t}{\bar{Z}_t}\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 &lt; D &lt; 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\bar{Z}_t =&amp; A\left(\frac{Z_t}{\hat{F}_{t-s}}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\hat{T}_t =&amp; C(\bar{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{111}, 0 &lt; C &lt; 1, \phantom{111} t = s+1, \ldots, N.
+\end{align}`
+
+####Previsão - Série Sazonal Multiplicativa
+
+
+`$$\hat{Z}_{t+h} = (\bar{Z}_t + h\hat{T}_t)\hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s$$`
+
+
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Aditiva
+
+`\begin{align}
+\hat{F}_t =&amp; D\left(Z_t - \bar{Z}_t\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 &lt; D &lt; 1, \phantom{11} t = s + 1, \ldots, N. \\
+\bar{Z}_t =&amp; A\left(Z_t - \hat{F}_{t-s}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{11} t = s + 1, \ldots, N. \\
+\hat{T}_t =&amp; C(\hat{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{11} 0 &lt; C &lt; 1, \phantom{11} t = s+1, \ldots, N.
+\end{align}`
+
+####Previsão - Série Sazonal Aditiva
+
+`$$\hat{Z}_{t+h} = \bar{Z}_t + h\hat{T}_t + \hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s.$$`
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa - Aplicação 
+
+`$$Z_t = \mu_t F_t + T_t + a_t, \phantom{111}, t = 1, \ldots, N.$$`
+
+- Aplicamos o método HW multiplicativo a série IPI.
+
+- É uma série periódica com `\(s=12\)`, durante o período de janeiro de 1969 a julho de 1979.
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa - Aplicação 
+
+
+
+
+![](Aula_10_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa - Aplicação
+
+
+```
+##          Point Forecast    Lo 80    Hi 80    Lo 95    Hi 95
+## Aug 1979       23.03127 22.64653 23.41601 22.44286 23.61968
+## Sep 1979       21.95194 21.50061 22.40326 21.26169 22.64218
+## Oct 1979       23.48392 22.94250 24.02534 22.65590 24.31194
+## Nov 1979       21.96411 21.37255 22.55567 21.05939 22.86882
+## Dec 1979       20.86855 20.22454 21.51257 19.88362 21.85349
+## Jan 1980       20.84772 20.12937 21.56608 19.74909 21.94636
+## Feb 1980       19.97875 19.20947 20.74802 18.80224 21.15525
+## Mar 1980       22.26723 21.34376 23.19070 20.85490 23.67955
+## Apr 1980       21.19265 20.22927 22.15604 19.71928 22.66602
+## May 1980       22.68449 21.57667 23.79231 20.99022 24.37875
+## Jun 1980       22.98318 21.77659 24.18976 21.13787 24.82849
+## Jul 1980       23.77446 20.22111 27.32781 18.34008 29.20884
+```
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa - Aplicação
+
+![](Aula_10_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

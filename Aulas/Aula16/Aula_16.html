@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 16 - Modelos de médias móveis, Modelos auto-regressivos e de médias móveis e modelos ARIMA</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 16 - Modelos de médias móveis, Modelos auto-regressivos e de médias móveis e modelos ARIMA
+## Material fortemente baseado no livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-10-26)
+
+---
+
+class: middle
+##Modelos de médias móveis
+
+- Um modelo de médias móveis de ordem `\(q\)`, é definido por meio de:
+
+`\begin{align}
+Z_t  =&amp; \mu + a_t -\theta_1 a_{t-1} - \ldots  -\theta_q a_{t-q} \\
+\tilde{Z}_t =&amp; (1 - \theta_1 B - \ldots - \theta_q B^q) a_t \\
+\tilde{Z}_t  =&amp; \theta(B) a_t 
+\end{align}`
+em que `\(\theta(B) = (1 - \theta_1 B - \ldots - \theta_q B^q).\)` 
+
+
+
+
+---
+class: middle
+###Condições de Estacionariedade - MA(q)
+
+- Dado que `\(\psi(B) = 1 - \theta_1 B - \ldots -\theta_q B^q,\)` não há restrições sobre os parâmetros `\(\theta_j\)` para que o processo seja estacionário.
+
+###Condições de Invertibilidade - MA(q)
+
+- Usando um argumento completamente similar ao que foi feito aos modelos
+auto-regressivos, no caso de estacionariedade.
+
+- Pode-se verificar que a condição de invertibilidade para um modelo de médias móveis de ordem `\(q\)` é que as raízes da equação característica `\(\theta(B) = 0\)` esteja fora do círculo unitário.
+
+- Nestas condições, um modelo `\(MA(q)\)` é equivalente a um modelo AR de ordem infinita.
+
+
+---
+class: middle
+###Variância
+
+Temos que a função de autocovariância é dada por:
+
+`\begin{align}
+\gamma_j =&amp; E[\tilde{Z}_t, \tilde{Z}_{t-j}] \\
+=&amp; E\left[\left( a_t - \sum_{k=1}^q \theta_k a_{t-k}  \right)\left(  a_{t-j} - \sum_{l=1}^q \theta_l a_{t-j-l}  \right)\right] \\
+=&amp; E[a_t a_{t-j}] - \sum_{k=1}^q \theta_k E[a_{t-j}a_{t-k}] - \sum_{l=1}^q \theta_l E[a_t a_{t-j-l}] + \sum_{k=1}^q\sum_{l=1}^q \theta_k \theta_l E[a_{t-k}a_{t-j-l}]
+\end{align}`
+
+
+Lembrando que 
+
+`\begin{align}
+E[a_t a_{t-j}] = \left\{\begin{array}{cc} 
+\sigma^2_a,   &amp; j = 0 \\
+0, &amp; j \neq 0.   
+\end{array}\right.
+\end{align}`
+
+---
+class: middle
+###Variância
+
+Logo, a variância do modelo é dada por
+
+`$$\gamma_0 =  \sigma^2_a +  \sum_{l=1}^q \theta_l^2 \sigma_a^2 = (1 + \theta_1^2 + \ldots + \theta^2_q) \sigma_a^2.$$`
+- Pois, para `\(j=0\)`, tem-se `\(E[a_t a_{t-j}] = E[a_t a_{t}]\)`. Para `\(j=0\)` e `\(k=l\)` tem-se  `\(\theta_k \theta_l E[a_{t-k}a_{t-j-l}] = \theta_l^2\sigma_a^2\)`, cujo o número de ocorrência é igual a `\(q\)`,
+
+
+---
+class: middle
+###Função de autocorrelação
+
+`\begin{align}
+\gamma_j = E[a_t a_{t-j}] - \sum_{k=1}^q\theta_k E[a_{t-j}a_{t-k}] - \sum_{l=1}^q \theta_l E[a_t a_{t-j-l}] + \sum_{k=1}^q\sum_{l=1}^q \theta_k \theta_l E[a_{t-k}a_{t-j-l}]
+\end{align}`
+
+vemos que podemos reescrever `\(\gamma_j\)` da seguinte forma
+
+`\begin{align}
+\gamma_j = \left\{\begin{array}{cc} 
+\left( -\theta_j + \sum_{l=1}^{q-j} \theta_j \theta_{j+l}\right) \sigma^2_a   &amp; j = 1, \ldots,q, \\
+0, &amp; j &gt; q.   
+\end{array}\right.
+\end{align}`
+
+
+- Pois para `\(j = 1, \ldots, q\)`, temos `\(E[a_t a_{t-j}] = 0\)`, para `\(k=j\)`  temos `\(\sum_{k=1}^q \theta_k E[a_{t-j}a_{t-k}] = -\theta_j,\)` com ocorrência igual a 1 e para `\(k = j + l\)` temos `\(\sum_{k=1}^q\sum_{l=1}^q \theta_k \theta_l E[a_{t-k}a_{t-j-l}] =  \theta_j \theta_{j+l}\sigma_a^2\)`
+com ocorrência igual a `\(q-j.\)`
+
+
+---
+class: middle
+###Função de autocorrelação
+
+
+- Logo a função de autocorrelação de um modelo de médias móveis é dado por:
+
+`\begin{align}
+\rho_j = \left\{\begin{array}{cc} 
+\frac{-\theta_j + \theta_1 \theta_{j+1} + \theta_2 \theta_{j+2} + \ldots + \theta_{q-j} \theta_q }{1 + \theta_1^2 + \ldots + \theta_q^2}   &amp; j = 1, \ldots,q, \\
+0, &amp; j &gt; q.   
+\end{array}\right.
+\end{align}`
+
+- A fac de um processo `\(MA(q)\)` é igual a zero para "lags" maiores do que `\(q\)`, ao contrário do que acontece com um processo AR.
+
+---
+class: middle
+##Exemplo 1 - Modelo MA(1) (Morettin e Toloi, 2004) 
+
+- Considere o seguinte modelo:
+
+`$$\tilde{Z}_t = a_t - \theta a_{t-1}$$`
+ou 
+
+`$$\tilde{Z}_t = (1 - \theta B) a_{t},$$`
+de modo que `\(\theta(B) = 1 - \theta B.\)` Como `\(\psi(B) = 1 - \theta B\)` é finito, o processo é sempre estacionário, de acordo com a Proposição da aula 10.
+
+- Como `\(a_t = [\theta(B)]^{-1}\tilde{Z}_t = \frac{1}{1-\theta B} \tilde{Z}_t,\)`
+
+obtemos a forma invertível
+
+`$$\tilde{Z}_t = -\theta \tilde{Z}_{t-1} -\theta^2 \tilde{Z}_{t-2} - \ldots + a_t$$`
+
+se `\(|\theta| &lt; 1\)`, ou seja, a série `\(\pi(B) = \theta^{-1}(B)\)` acima converge para `\(|B| \leq 1.\)`
+
+- Isto é equivalente a dizer que as raízes da equação `\(\theta(B) = 1 - \theta B = 0\)` estão fora do círculo unitário.
+
+
+---
+class: middle
+##Exemplo 2 - Modelo MA(1) (Morettin e Toloi, 2004) 
+
+- Para um processo `\(MA(1),\)` a condição de invertibilidade é `\(-1 &lt; \theta &lt; 1.\)`
+
+- A variância é dada por: `\(\sigma_Z^2 = (1 + \theta^2)\sigma_a^2\)`
+
+e a fac se obtém de
+
+`\begin{align}
+\rho_j = \left\{\begin{array}{cc} 
+\frac{-\theta}{1 + \theta^2}   &amp; j = 1, \\
+0, &amp; j \geq 2.   
+\end{array}\right.
+\end{align}`
+
+---
+class: middle
+##Exemplo 2 - Modelo MA(2) (Morettin e Toloi, 2004) 
+
+- Considere 
+
+`$$\tilde{Z}_t = a_t -\theta_1 a_{t-1} - \theta_2 a_{t-2},$$`
+
+- O processo resultante será estacionário para quaisquer valores de `\(\theta_1\)` e `\(\theta_2\)`, mas invertível somente se as raízes características de `\(\theta(B) = 1 - \theta_1 B - \theta_2 B^2 = 0\)`
+estiverem fora do círculo unitário.
+
+A região de invertibilidade  é dada por:
+
+`\begin{align}
+= \left\{\begin{array}{c} 
+\theta_2 + \theta_1 &lt; 1,   \\
+\theta_2 - \theta_1 &lt; 1, \\
+-1 &lt; \theta_2 &lt; 1.
+\end{array}\right.
+\end{align}`
+equivalente a região de estacionariedade encontrada para `\(AR(2).\)`
+
+---
+class: middle
+##Exemplo 2 - Modelo MA(2) (Morettin e Toloi, 2004) 
+
+A variância e função de autocorrelação são dadas por:
+
+`\begin{align}
+\gamma_0 =&amp; (1 + \theta_1^2 + \theta_2^2) \sigma^2_a \\
+\rho_1 =&amp; \frac{-\theta_1(1 - \theta_2)}{1 + \theta_1^2 + \theta_2^2} \\
+\rho_2 =&amp; \frac{-\theta_2}{1 + \theta_1^2 + \theta_2^2} \\
+\rho_j =&amp; 0, \phantom{111} j = 3,4,5 \ldots
+\end{align}`
+
+---
+class: inverse, middle, center
+##Modelos autoregressivos e de médias móveis
+
+
+---
+class: middle
+##Modelos autoregressivos e de médias móveis
+
+- Os modelos `\(ARMA(p,q)\)` da forma:
+
+`\begin{align}
+\tilde{Z}_t =&amp; \phi_1 \tilde{Z}_{t-1} + \ldots + \phi_p \tilde{Z}_{t-p}+ a_t - \theta_1 a_{t-1} - \ldots - \theta_q a_{t-q}. \\
+\phi(B) \tilde{Z}_t =&amp; \theta(B) a_t.
+\end{align}`
+
+###Estacionariedade e Invertibilidade (Modelo ARMA)
+
+- A importância do processo ser invertível pode vista [aqui](https://stats.stackexchange.com/questions/50682/what-is-the-intuition-of-invertible-process-in-time-series) 
+
+- O processo é estacionário se as raízes de `\(\phi(B) = 0\)` caírem todas as fora do círculo unitário e o processo é invertível se todas as raízes de `\(\theta(B) = 0\)` caírem fora do círculo unitário.
+
+---
+class: middle
+##Função de Autocovariancia - Modelos ARMA
+
+A função de autocovariancia é dada por:
+
+`\begin{align}
+\gamma_j =&amp; E[\tilde{Z}_t \tilde{Z}_{t-j}] \\
+=&amp; \phi_1 E[\tilde{Z}_{t-1} \tilde{Z}_{t-j}] + \ldots + \phi_p E[\tilde{Z}_{t-p} \tilde{Z}_{t-j}] \\
+&amp;- E[a_t \tilde{Z}_{t-j}] -
+\theta_1 E[a_{t-1} \tilde{Z}_{t-j}] - \ldots -\theta_q E[a_{t-q} \tilde{Z}_{t-j}] 
+\end{align}`
+
+Ou seja,
+
+`$$\gamma_j = \phi_1 \gamma_{j-1} + \phi_2 \gamma_{j-2} + \ldots + \phi_p \gamma_{j-p} + \gamma_{za}(j) - \theta_1 \gamma_{za}(j-1) - \ldots -\theta_q \gamma_{za}(j-q).$$`
+
+- Agora note que `\(Z_{t-j}\)` só depende dos choques ocorridos até o instante `\(t-j\)`, pois considerando o processo linear geral
+
+
+`\begin{align}
+\tilde{Z}_{t-j} = a_{t-j} + \psi_1 a_{t-j-1} + \psi_2 a_{t-j-2} + \ldots = \psi(B)a_{t-j}
+\end{align}`
+
+Logo,
+
+`\begin{align}
+\gamma_{za}(j) = E[a_t \tilde{Z}_{t-j}] = \left\{\begin{array}{cc} 
+=0  &amp; j &gt; 0  \\
+\neq 0 &amp; j \leq 0.
+\end{array}\right.
+\end{align}`
+
+---
+class: middle
+##Função de Autocorrelação - Modelos ARMA
+
+De modo que temos que a função de autocovariância  dada por:
+
+`\begin{align}
+\gamma_j = \phi_1 \gamma_{j-1} + \phi_2 \gamma_{j-2} + \ldots + \phi_p \gamma_{j-p}, \phantom{111} j &gt; q.
+\end{align}`
+
+A função de autocorrelação é obtida de 
+
+`\begin{align}
+\rho_j = \phi_1 \rho_{j-1} + \phi_2 \rho_{j-2} + \ldots + \phi_p \rho_{j-p}, \phantom{111} j &gt; q.
+\end{align}`
+
+- Do que se deduz que as autocorrelações de "lags" `\(1,2, \ldots, q\)` serão afetadas diretamente pelos parâmetros de médias móveis, mas para `\(j &gt; q\)` as mesmas comportam-se como nos modelos autoregressivos.
+
+- Pode-se verificar que se `\(q &lt; p\)` a fac consiste numa mistura de exponenciais e/ou senoides amortecidas, entretanto `\(q \geq p\)`, os primeiros `\(q-p-1\)` valores `\(\rho_0, \rho_1, \ldots, \rho_{q-p}\)` não seguirão esse padrão.
+
+
+---
+class: middle
+##Exemplo 3 - Modelo ARMA(1,1) (Morettin e Toloi, 2004) 
+
+- O modelo `\(ARMA(1,1)\)` é dado por:
+
+`$$\tilde{Z}_t = \phi \tilde{Z}_{t-1} + a_t - \theta a_{t-1},$$`
+
+####Condições de estacionariedade e invertibilidade
+
+- Segue-se que a condição de estacionariedade para um processo `\(ARMA(1,1)\)` é a mesma que para um processo `\(AR(1)\)` e a condição de invertibilidade é a mesma que para um processo `\(MA(1)\)`.
+
+---
+class: middle
+##Exemplo 3 - Modelo ARMA(1,1) (Morettin e Toloi, 2004) 
+
+####Função de autocorrelação
+
+- Para calcularmos a função de autocorrelação do processo ARMA(1,1) é mais fácli escrevê-lo como um processo linear geral
+
+`\begin{align}
+\tilde{Z}_t =&amp; \phi_1 \tilde{Z}_{t-1} + a_t - \theta_1 a_{t-1} \\
+(1- \phi_1 B)\tilde{Z}_{t} &amp;= (1- \theta_1 B) a_t \\
+\tilde{Z}_{t} =&amp; \frac{1}{(1- \phi_1 B)} (1- \theta_1 B) a_t \\
+\tilde{Z}_{t} =&amp; (1 + \phi_1 B + \phi_1^2 B^2 + \ldots)(1 - \theta_1 B) a_t \\
+\tilde{Z}_{t} =&amp; \left[1 + \phi_1 B + \phi_1^2 B^2 + \ldots - \theta_1 B - \theta_1 \phi_1 B^2 - \theta_1 \phi_1^2 B^3 \ldots \right] a_t \\
+\tilde{Z}_{t} =&amp; \left[ 1 + (\phi_1 - \theta_1) B + (\phi_1^2 - \phi_1\theta_1)B^2 + \ldots \right] a_t \\
+\tilde{Z}_{t} =&amp; \left[ 1 + (\phi_1 - \theta_1) B + (\phi_1 - \theta_1) \phi_1 B^2 + (\phi_1 - \theta_1)\phi_1^2 B^3 \right] a_t \\
+\tilde{Z}_{t} =&amp; a_t + (\phi_1 - \theta_1) \sum_{j=1}^{\infty} \phi_1^{j-1} a_{t-j}.
+\end{align}`
+
+
+
+---
+class: middle
+##Exemplo 3 - Modelo ARMA(1,1) (Morettin e Toloi, 2004) 
+
+- Considerando que o processo linear geral é dado por `\(\tilde{Z}_t = \sum_{j=0}^{\infty}\psi_j a_{t-j}\)` com facv `\(\gamma_j = \sigma_a^2 \sum_{j=0}^{\infty}\psi_j^2.\)` 
+
+- O modelo `\(ARMA(1,1)\)` pode ser considerado um processo linear geral com 
+`\(\psi_0 = 1\)` e `\(\psi_j = (\phi_1 - \theta_1)\phi_1^{j-1}.\)` Logo,
+
+`\begin{align}
+\gamma_0 =&amp; \sigma_a^2\sum_{j=0}^{\infty} \psi_j^2 \\
+=&amp; \sigma_a^2 \left[ 1^2 + (\phi_1 - \theta_1)^2 \sum_{j=1}^{\infty } \phi^{2 (j-1)} \right] \\
+=&amp; \sigma_a^2 \left[ 1^2 + \frac{(\phi_1 - \theta_1)^2}{1-\phi_1^2} \right] = \sigma_a^2 \left[  \frac{(1-\phi_1^2)}{(1-\phi_1^2)} + \frac{(\phi_1 - \theta_1)^2}{(1-\phi_1^2)} \right] \\
+&amp;= \sigma_a^2 \frac{1+\theta_1^2-2\phi_1\theta_1}{(1-\phi_1^2)}.
+\end{align}`
+
+---
+class: middle
+##Exemplo 3 - Modelo ARMA(1,1) (Morettin e Toloi, 2004) 
+
+
+`\begin{align}
+\gamma_1 =&amp; \sigma_a^2\sum_{i=0}^{\infty} \psi_i \psi_{i+j} \\
+=&amp; \sigma_a^2 \left[1(\phi_1 - \theta_1) + (\phi_1 - \theta_1)(\phi_1 - \theta_1)\phi_1 + (\phi_1 - \theta_1)(\phi_1 - \theta_1)\phi_1^2 + \ldots \right] \\
+=&amp; \sigma_a^2 \left[ (\phi_1 - \theta_1) + (\phi_1 - \theta_1)^2\phi_1\sum_{j=0}^{\infty} \phi_1^{2j} \right] \\
+=&amp; \sigma_a^2 \left[ (\phi_1 - \theta_1) + \phi_1 \frac{(\phi_1 - \theta_1)^2}{(1 - \phi_1^2)} \right] \\
+=&amp; \sigma_a^2 \left[ \frac{(\phi_1 - \theta_1)(1 - \phi_1^2)}{(1 - \phi_1^2)} + \phi_1 \frac{(\phi_1 - \theta_1)^2}{(1 - \phi_1^2)} \right] \\
+=&amp; \sigma_a^2 \left[ \frac{(\phi_1 - \theta_1)(1 - \phi_1^2 + \phi_1^2 - \phi_1\theta_1)}{(1 - \phi_1^2)}  \right] =  \sigma_a^2 \left[ \frac{(\phi_1 - \theta_1)(1 - \phi_1\theta_1)}{(1 - \phi_1^2)}  \right]\\
+\end{align}`
+
+---
+class: middle
+##Exemplo 3 - Modelo ARMA(1,1) (Morettin e Toloi, 2004) 
+
+- Para `\(j &gt; 1\)`, temos
+
+`$$\rho_j = \phi_1 \rho_{j-1}$$`
+
+- A presença de um termo de médias móveis entra somente na determinação de `\(\rho_1\)`. 
+
+- As demais autocorrelações são afetadas somente pela parte auto-regressiva do modelo.
+
+---
+class: inverse, middle, center
+##Modelos auto-regressivos integrados e de médias móveis
+
+---
+class: middle
+##Modelos auto-regressivos integrados e de médias móveis
+
+###Modelos não-estacionários
+
+- Os modelos AR, MA e ARMA são apropriados para descrever séries estacionárias. 
+
+- No entanto, na prática muitas séries não são estacionárias.
+
+- Os modelos auto-regressivos integrados e de médias móveis (ARIMA) são apropriados para representar séries cujo comportamento seja não explosivo.
+
+
+---
+class: middle
+##Modelos auto-regressivos integrados e de médias móveis
+
+- Uma forma matemática de representar um modelo ARIMA de ordem `\((p,q,d)\)` é dada por:
+
+`\begin{align}
+\varphi(B)Z_t =&amp; \theta(B)a_t \\
+\phi(B)(1 - B)^d Z_t =&amp; \theta(B)a_t \\
+\phi(B)\Delta^dZ_t =&amp; \theta(B)a_t \\ 
+\end{align}`
+em que `\(d\)` é o número de diferenças.
+
+- Portanto, o modelo supõe que a d-ésima diferença da série `\(Z_t\)` pode ser representada por um modelo ARMA, estacionário e invertível.
+
+- Na maioria dos casos usuais, `\(d = 1\)` ou `\(d = 2,\)` que correspondem a dois casos interessantes e comuns de não-estacionariedade homogênea:
+
+a. séries não estacionárias quanto ao nível: normalmente uma diferença basta
+
+b.  séries não estacionárias quanto à inclinação: necessário tomar a segunda diferença.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

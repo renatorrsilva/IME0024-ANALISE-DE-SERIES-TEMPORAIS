@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 6 - Introdução à análise de séries temporais</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 6 - Introdução à análise de séries temporais
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-08-31)
+
+---
+
+#Introdução
+
+## O que é uma série temporal ?
+
+Uma série temporal é um qualquer conjunto de observações ordenadas no tempo (Morettin &amp; Toloi, 2004).
+ 
+##Exemplos
+
+1. Valores diários de poluição na cidade de São Paulo;
+2. Valores mensais de temperatura na cidade de Cananéia;
+3. Índices diários da Bolsa de Valores de São Paulo;
+4. Precipitação atmosférica anual na cidade de Fortaleza;
+5. Número médio anual de manchas solares;
+6. Registro de marés no porto de Santos.
+
+
+---
+### Breve Histórico
+
+- Os desenvolvimentos teóricos na análise de séries temporais começaram com **processos estocásticos**. 
+
+- A primeira aplicação real de modelos autoregressivos aos dados pode ser trazida de volta ao trabalho de [Yule](https://en.wikipedia.org/wiki/Udny_Yule) e [Walker](https://en.wikipedia.org/wiki/Gilbert_Walker) nas décadas de 1920 e 1930.
+
+- Durante esse período, a média móvel foi introduzida para remover flutuações periódicas nas séries temporais, por exemplo, flutuações devido à sazonalidade. 
+
+- Herman [Wold](https://en.wikipedia.org/wiki/Herman_Wold) apresentou os modelos ARMA (AutoRegressive Moving Average) para séries estacionárias,
+
+- Mas não conseguiu derivar uma função de verossimilhança para permitir a estimativa da máxima verossimilhança (ML) dos parâmetros.
+
+- Isso aconteceu apenas na década de 1970. G. E. P. [Box](https://en.wikipedia.org/wiki/George_E._P._Box) e G. M. Jenkins publicaram o clássico "Análise de Séries Temporais", descrevendo o procedimento completo de modelagem para séries individuais: especificação, estimativa, diagnóstico e previsão.
+
+
+---
+### Breve Histórico
+
+- Atualmente, os chamados modelos Box-Jenkins são talvez os mais usados e muitas técnicas utilizadas para previsão e ajuste sazonal podem ser rastreadas até esses modelos.
+
+- A primeira generalização foi a aceitação de modelos ARMA multivariados, entre os quais os modelos VAR (Vector AutoRegressive) se tornaram populares. 
+
+#### Modelos ARCH and GARCH 
+
+- Outra linha de desenvolvimento em séries temporais, originárias dos modelos Box-Jenkins, são os modelos não lineares, ARCH (AutoRegressive Condicional Heteroscedasticity) - e GARCH.
+
+- Esses modelos permitem parametrização e previsão de variância não constante. Esses modelos se mostraram muito úteis para séries temporais financeiras. 
+
+- O desenvolvimento desses modelos e o de correção de erros deram a C. W. J [Granger](https://en.wikipedia.org/wiki/Clive_Granger) e R. F. [Engle](https://en.wikipedia.org/wiki/Robert_F._Engle) o Prêmio Nobel Memorial de Ciências Econômicas em 2003.
+
+- Maiores detalhes podem ser vistos [em :](https://www.statistics.su.se/english/research/time-series-analysis/a-brief-history-of-time-series-analysis-1.259451#:~:text=Publications-,A%20brief%20history%20of%20time%20series%20analysis,started%20early%20with%20stochastic%20processes.&amp;text=During%20this%20time%20the%20moving,example%20fluctuations%20due%20to%20seasonality.)
+
+---
+##Séries Temporais Discretas
+
+Uma série temporal é discreta quando o conjunto de observações for tomado em tempos específicos, geralmente equiespaçados.
+
+##Séries Temporais Contínuas
+Uma série temporal é contínua  quando as observações são feitas continuamente no tempo.
+
+##Algumas observações (Ehlers, 2008)
+
+- Séries contínuas podem ser discretizadas se os valores são registrados a certos intervalos de tempo.
+- Séries podem ser valores agregados ou acumulados em intervalos de tempo, exemplo, exportações medidas mensalmente ou quantidade de chuva medida diariamente.
+
+---
+#Exemplo
+
+- Os exemplos 1 à 5 são séries temporais discretas, enquanto que o exemplo 6 é uma série temporal contínua.
+
+- Observa-se que para analisar o exemplo 6, será necessário amostrá-la em um intervalo de tempo regular, convertendo a em uma série discreta.
+
+- Em outros casos, como para as séries 4 ou 5, temos que o valor da série num dado instante é obtido acumulando-se (ou agregando-se) valores em intervalos de tempos iguais.
+
+---
+class: inverse, center, middle
+#Gráficos de séries temporais
+
+---
+#Gráfico de série temporal
+
+- Uma importante ferramenta em análise de séries temporais é o gráfico de séries temporais.
+
+- Um gráfico de série temporal é um gráfico de dispersão com valores observados no eixo y e as datas correspondentes no eixo x.
+
+---
+#Exemplos de Gráficos de série temporal
+
+a. Número médio diário de defeitos de fabricação de caminhões;
+
+b. Produção anual de tabaco nos EUA;
+
+c. Produção trimestral de cerveja nos EUA;
+
+d. Número de moscas.
+ 
+
+---
+#Exemplos de Gráficos de série temporal
+&lt;img src="Aula_6_files/figure-html/Fig1.jpeg" width="80%" align="center" /&gt;
+
+---
+##Número médio diário de defeitos de fabricação de caminhões
+
+- A série número médio diário de defeitos de fabricação de caminhões aparentemente 
+varia em torno de um nível fixo (uma média).
+
+- Séries que apresentam esse comportamento são ditas serem estacionárias na média.
+
+##Produção anual de tabaco nos EUA
+
+- Por outro lado, a série produção anual de tabaco nos EUA aparenta exibir uma tendência;
+
+- Além disso, a variância cresce ao longo do tempo;
+
+- Série não estacionária.
+
+---
+##Produção trimestral de cerveja nos EUA
+
+- A série produção trimestral de cerveja nos EUA apresenta outra característica padrão que é repetitiva devido a variação sazonal.
+
+- São chamadas de séries temporais sazonais.
+
+##Número de moscas
+
+- Nessa série a não estacionariade é devida uma mudança na estrutura da série devida a uma perturbação externa (Intervenção).
+- Para esses casos, transformações nos dados não resolverá o problema.
+
+
+---
+class: inverse, center, middle
+#Alguns conceitos iniciais
+
+---
+## Tendência 
+
+-  Uma mudança a longo prazo no nível da série. Crescimento ou descrescimento.
+
+## Sazonalidade 
+
+- Comportamento da série temporal tende a se repetir a cada `\(s\)` períodos de tempo.
+
+### Diferença entre padrões sazonais e cíclicos (Rob J. Hyndman)
+
+-  Padrões sazonais tem comprimento constante enquanto que padrões cíclicos tem comprimentos variáveis;
+
+-  O comprimento médio dos ciclos são mais longos do que padrões sazonais;
+
+- Magnitude do ciclo é mais variável do que a do sazonal
+
+[Rob](https://robjhyndman.com/)
+
+
+---
+#Depedência em Séries Temporais  (Nicoleta Serban)
+
+- Séries Temporais implica em dependência, portanto, o número de graus de liberdade
+é menor do que o número observado.
+
+- Amostragem dos dados: `\(Y_t, t = 1, \ldots, T\)`, concentrado em uma pequena parte 
+do espaço de probabilidade
+
+##Ignorar dependência resulta em
+
+- Erros padrões irrealísticamente pequenos e, consequentemente,
+intervalos de confiança exageradamente estreitos.
+
+Referência: [Nicoleta](https://www.youtube.com/watch?v=VTarwTHQWVk&amp;list=PL_onPhFCkVQghJC-KQkUNvkAGbriARyfX&amp;index=2)
+
+---
+class: inverse, center, middle
+#Outros exemplos - Victor Hugo D'Avila
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig2.jpeg" width="120%" align="center" /&gt;
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig3.jpeg" width="120%" align="center" /&gt;
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig4.jpeg" width="120%" align="center" /&gt;
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig5.jpeg" width="120%" align="center" /&gt;
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig6.jpeg" width="120%" align="center" /&gt;
+
+---
+&lt;img src="Aula_6_files/figure-html/Fig7.jpeg" width="120%" align="center" /&gt;
+
+
+---
+class: inverse, center, middle
+#Dados Simulados
+
+
+---
+##Exemplo 1 - Processo Auto-regressivo de ordem 1
+
+
+```r
+ar1.sim = arima.sim(list(order = c(1,0,0), ar = 0.7), n =500)
+ts.plot(ar1.sim)
+```
+
+
+---
+##Exemplo 1 - Processo Auto-regressivo de ordem 1
+
+![](Aula_6_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+---
+##Exemplo 2 - Processo ARIMA (1,1,0)
+
+
+```r
+arima110.sim &lt;- arima.sim(list(order = c(1,1,0), ar = 0.7), n =500)
+
+#Plotando a série original
+ts.plot(arima110.sim)
+
+#Plotando a série com 1 diferença
+ts.plot(diff(arima110.sim, differences=1))
+```
+
+---
+##Exemplo 2 - Processo ARIMA (1,1,0) 
+
+![](Aula_6_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+##Exemplo 2 Processo ARIMA (1,1,0) - Série com uma diferença 
+
+
+![](Aula_6_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+##Exemplo 3 - Passeio aleatório
+
+
+```r
+rw.sim &lt;- arima.sim(list(order = c(0,1,0)), n =500)
+#Plotando a série original
+ts.plot(rw.sim)
+
+#Plotando a série com uma única diferença
+ts.plot(diff(rw.sim, differences=1))
+```
+
+---
+##Exemplo 3 - Passeio aleatório
+
+![](Aula_6_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+---
+##Exemplo 3 - Passeio aleatório - Série com uma única diferença
+
+![](Aula_6_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

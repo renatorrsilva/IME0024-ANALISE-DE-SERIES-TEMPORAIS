@@ -1,0 +1,66 @@
+---
+title: "Trabalhos sobre Tendência e Sazonalidade "
+subtitle: "Alguns comentários"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+---
+class: middle, 
+#Trabalho sobre  conceito de  tendência e sazonalidade
+
+
+- O trabalho 1 tem como tema: tendência e sazonalidade
+
+- Entrega: 23 de setembro.
+
+- Forma: Relatório em formato .pdf **(Obrigatório)**.
+
+
+
+---
+class: middle
+###Análise  1 - Série $A_{11}$
+
+- Considere a Série $A_{11}$ (Consumo). Vendas físicas na região metropolitana de São Paulo, observações mensais de janeiro de 1984 a dezembro de 1995.
+
+#####Obs:
+
+- A série original têm observações mensais de janeiro de 1984 a outubro de 1996. 
+
+###Objetivo da Análise
+
+a.  Estimar o componente de tendência $T_t$ no modelo. 
+
+b.  Obter uma série livre de tendência 
+
+c.  Estimar o componente de sazonalidade. 
+
+d.  Obter uma série livre de sazonalidade.
+
+Para estimar a tendência você pode usar média móvel ou regressão não paramétrica loess.
+Para estimar sazonalidade, utilize o método de sazonalidade estocástica visto nas ultimas aulas.
+
+```{r}
+
+data = read.csv("consumo.csv", header = TRUE)
+x = ts(data$consumo, start = c(1984,1), frequency=12)
+tempo = 1:length(x)
+y = as.vector(x)
+plot.ts(tempo,y,type="l")
+mod<- loess(y ~ tempo, span=0.1, degree=1)
+pred = predict(mod)
+
+plot(tempo,y,type="l")
+lines(tempo, pred,col="red")
+
+
+
+```

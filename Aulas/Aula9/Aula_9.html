@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 4 - Sazonalidade</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 4 - Sazonalidade
+## Material fortemente baseado no livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-09-14)
+
+---
+
+class: middle
+##Introdução
+
+
+
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Morettin e Toloi 2004
+
+- "Empiricamente, consideramos como sazonais os fenômenos que ocorrem regularmente de ano para ano, como aumento de vendas de passagens aéreas no verão, aumento da produção de leite no Brasil nos meses de novembro, dezembro, e janeiro, aumento de vendas no comércio na época do Natal e etc" (Morettin &amp; Toloi, 2004).
+
+####Rob Hyndman
+
+- "A seasonal pattern exists when a series is influenced by seasonal factors (e.g., the quarter of the year, the month, or day of the week). Seasonality is always of a fixed and known period. Hence, seasonal time series are sometimes called periodic time series" [rob hyndman](https://robjhyndman.com/hyndsight/cyclicts/).
+
+
+---
+class: middle, 
+###Revisão de literatura sobre conceito de sazonalidade
+
+####Willian Wei 2005
+
+- "Many business and economic time series contain a seasonal phenomenon that repeats itself after a regular period of time. The smallest time period for this repetitive phenomenon is called the seasonal period." 
+
+- "For example, the quartely series of ice-cream sales is high each summer, and the series repeats this phenomenon each year giving a seasonal period of 4".  
+
+####Box &amp; Jenkins 1976
+
+-  "In general, we say that a series exhibits periodic behavior with period s, when similarities in the series occur after `\(s\)` basic time intervals" (Box &amp; Jenkins, 1976.)
+
+####Douglas Montgomery 2005
+
+- Seasonality is the component of time series behavior that repeats on a regular basis, such as each year.
+
+
+---
+class: middle
+
+##Modelo de decomposição da série
+
+`$$Z_t = T_t + S_t + a_t,$$`
+em que `\(T_t\)` e `\(S_t\)` representam a tendência e sazonalidade, enquanto `\(a_t\)` é
+um componente aleatório de média zero e variância constante `\(\sigma_{a}\)`.
+
+- Supondo que  `\(a_t\)` seja um ruído branco, então `\(E[a_t, a_s] = 0\)`,
+`\(s \neq t\)`. 
+
+
+---
+class: middle
+
+#Sazonalidade - Modelo Aditivo
+
+- O objetivo será ajustar uma série para a componente sazonal, ou seja, estimar `\(S_t\)` e subtrair a série estimada de `\(Z_t\)` no modelo de decomposição de série.
+
+- Desta maneira, um *procedimento de ajustamento sazonal* consiste em:
+
+a.  obter estimativas `\(\hat{S}_t\)` de `\(S_t\)`;
+
+b.  calcular
+
+`$$Z^{SA}_t = Z_t - \hat{S}_t.$$`
+
+
+---
+class: middle
+
+#Sazonalidade - Modelo Multiplicativo
+
+`$$Z_t = T_t S_t a_t,$$`
+a série sazonalmente ajustada será
+
+`$$S_t^{SA} = \frac{Z_t}{\hat{S}_t}.$$`
+
+Outra opção seria tomar logaritmos para poder voltar ao modelo aditivo.
+
+---
+class: middle
+
+###Sazonalidade - Conceitos
+
+- O que se observa em séries sazonais é que ocorrem relações:
+
+a . Entre observações para meses sucessivos em um ano particular;
+
+b . Entre as observações para o mesmo mês em anos sucessivos.
+
+###Métodos para estimar sazonalidade 
+
+a. Sazonalidade determinística (modelos de regressão)
+
+b. Sazonalidade estocástica (método das médias móveis)
+
+c. Modelos SARIMA
+
+d. Modelos de Espaço de Estados
+
+####Nessa aula, serão abordados apenas os item a e b!!!
+
+---
+class: middle
+###Revisão de Modelos de Regressão Múltipla
+
+
+Dada uma amostra `\((x_1, y_1), \ldots, (x_N, y_N)\)` e o modelo `\(\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}\)`, vamos estimar os parâmetros `\(\beta\)`.
+
+O método dos mínimos quadrados consiste em estimar os coeficientes de regressão minimizando a soma de quadrados residuais.
+
+
+`\begin{align}
+SQR(\beta) =&amp; \sum_{i=1}^{N}(y_i - f(x_i))^2 \\
+           =&amp; \sum_{i=1}^{N}(y_i - \beta_0 - \sum_{j=1}^p x_{ij}\beta_j)^2.
+\end{align}`
+
+---
+class: middle
+###Revisão de Modelos de Regressão Múltipla
+
+Como minimizar a soma de quadrados residual ?
+
+--
+`$$SQR(\boldsymbol{\beta}) = (\mathbf{y} - \mathbf{X}\beta)^{'} (\mathbf{y} - \mathbf{X}\boldsymbol{\beta}).$$`
+
+
+--
+`$$\frac{\partial SQR}{\partial\boldsymbol{\beta}} = -2 \mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}).$$`
+
+
+--
+`$$\frac{\partial SQR}{\partial \boldsymbol{\beta}\boldsymbol{\beta}^{'}} = -2 \mathbf{X}^{'}\mathbf{X}.$$`
+
+--
+Assumindo que  `\(\mathbf{X}\)` tem posto coluna completo, então `\(\mathbf{X}^{'}\mathbf{X}\)` é positiva definida, nós definimos a primeira derivada igual a zero.
+
+--
+`$$\mathbf{X}^{'}(\mathbf{y} - \mathbf{X}\boldsymbol{\beta}) = \mathbf{0} \Rightarrow \mathbf{X}^{'}\mathbf{y} -\mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} = \mathbf{0} \Rightarrow \mathbf{X}^{'}\mathbf{X}\boldsymbol{\beta} = \mathbf{X}^{'}\mathbf{y}.$$`
+
+--
+para obter uma solução única
+
+`$$\hat{\boldsymbol{\beta}} = \left(\mathbf{X}^{'}\mathbf{X}\right)^{-1}\mathbf{X}^{'}\mathbf{y}.$$`
+
+
+
+
+---
+class: middle
+##Sazonalidade determinística (modelos de regressão)
+
+###Modelo de Regressão
+
+`$$Z_t = \sum_{j=0}^m \beta_j t^j + \sum_{j=1}^{12} \alpha_j d_{jt}+ a_t.$$`
+em `\(t\)` é o tempo (meses por exemplo) e `\(d_{ij}\)` é uma covariável que assume valor 1 se o tempo `\(t\)` corresponde ao mês `\(j\)` e 0, caso contrário.
+
+- No entanto, a matriz de incidência desse modelo é de posto incompleto.
+
+
+---
+class: middle
+##Sazonalidade determinística (modelos de regressão)
+
+Para resolver esse problema define-se
+
+`\begin{align}
+D_{jt} = \left\{\begin{array}{cc} 
+ 1    &amp; \mbox{se o período} \phantom{1} t \phantom{1} \mbox{corresponde ao mês} \phantom{1} j, \\
+-1    &amp; \mbox{se o período} \phantom{1} t \phantom{1} \mbox{corresponde ao mês} \phantom{1} 12, \\
+ 0,   &amp; c.c, \phantom{11} j = 1, \ldots, 11.   
+\end{array}\right.
+\end{align}`
+
+
+e, consequentemente, 
+
+`$$Z_t = \sum_{j=0}^m \beta_j t^j + \sum_{j=1}^{11} \alpha_j D_{jt}+ a_t.$$`
+
+o que na forma matricial resulta: 
+
+`\begin{align}
+\mathbf{Z} =&amp; \mathbf{X}\boldsymbol{\beta} + \mathbf{F}\boldsymbol{\alpha} + \boldsymbol{a} \\
+=&amp; [\mathbf{X} | \mathbf{F}]\boldsymbol{\theta} + \boldsymbol{a}.
+\end{align}`
+
+
+
+---
+class: middle
+##Exemplo no R 
+
+
+```r
+dat = read_csv("dados.csv") 
+dat = mutate(dat, tempo=1:nrow(dat), 
+             Mes= factor(Mes),
+             Resp = Resp*1000)
+
+ggplot(dat,aes(x=tempo, y=Resp)) +geom_point() + theme_bw()
+```
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+![](Aula_9_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+##Matriz X
+
+
+```
+##   (Intercept) tempo
+## 1           1     1
+## 2           1     2
+## 3           1     3
+## 4           1     4
+## 5           1     5
+## 6           1     6
+```
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+##Constrastes da Matriz F
+
+
+```
+##    [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11]
+## 1     1    0    0    0    0    0    0    0    0     0     0
+## 2     0    1    0    0    0    0    0    0    0     0     0
+## 3     0    0    1    0    0    0    0    0    0     0     0
+## 4     0    0    0    1    0    0    0    0    0     0     0
+## 5     0    0    0    0    1    0    0    0    0     0     0
+## 6     0    0    0    0    0    1    0    0    0     0     0
+## 7     0    0    0    0    0    0    1    0    0     0     0
+## 8     0    0    0    0    0    0    0    1    0     0     0
+## 9     0    0    0    0    0    0    0    0    1     0     0
+## 10    0    0    0    0    0    0    0    0    0     1     0
+## 11    0    0    0    0    0    0    0    0    0     0     1
+## 12   -1   -1   -1   -1   -1   -1   -1   -1   -1    -1    -1
+```
+
+
+
+---
+class: middle
+####Série de Índice de Produto Industrial do Brasil
+
+
+
+```
+## 
+## Call:
+## lm(formula = Resp ~ tempo + Mes, data = dat)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -921.7 -393.2  -35.3  359.8 1259.9 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  7332.52     111.49  65.769  &lt; 2e-16 ***
+## tempo         101.83       2.00  50.923  &lt; 2e-16 ***
+## Mes1         -671.21     182.69  -3.674 0.000422 ***
+## Mes2        -1152.42     182.58  -6.312 1.29e-08 ***
+## Mes3         -231.13     182.50  -1.266 0.208885    
+## Mes4         -488.96     182.43  -2.680 0.008871 ** 
+## Mes5         -134.04     182.39  -0.735 0.464449    
+## Mes6           79.88     182.36   0.438 0.662526    
+## Mes7          726.67     182.36   3.985 0.000144 ***
+## Mes8          719.46     182.39   3.945 0.000166 ***
+## Mes9          379.63     182.43   2.081 0.040522 *  
+## Mes10        1020.29     182.50   5.591 2.82e-07 ***
+## Mes11         100.71     182.58   0.552 0.582715    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 538.7 on 83 degrees of freedom
+## Multiple R-squared:  0.9716,	Adjusted R-squared:  0.9675 
+## F-statistic:   237 on 12 and 83 DF,  p-value: &lt; 2.2e-16
+```
+
+
+
+---
+class: middle
+##Teste para sazonalidade - Modelo de Análise de Variância
+
+Para testar a hipótese de sazonalidade, pode-se recorrer aos modelos de Análise de Variância com uma única classificação ("experimentos inteiramente ao acaso")
+
+###Modelo ANOVA
+
+`$$Z_{ij} = S_j + \epsilon_{ij},$$`
+assume-se que os meses são os tratamentos e os anos são repetições.
+
+
+---
+class: middle
+
+##Sazonalidade Estocástica
+
+- O método de médias móveis é apropriado quando se tem uma série temporal cuja a componente sazonal varia com o tempo (estocástico).
+
+- Dado que a tendência é estimada por meio de
+
+`$$\hat{T}_t = \sum_{j=-n}^n c_j Z_{t+j}, \phantom{111} t = n + 1, \ldots, N - n$$`
+
+- Os componentes sazonais são estimados da seguinte forma
+
+- Inicialmente, calcula-se `\(Y_t = Z_t - \hat{T}_t\)`.
+
+- Logo após, toma-se média dos meses: janeiro, fevereiro e etc .. .
+
+`$$\bar{Y}_{.j} = \frac{1}{n_j}\sum_{i=1}^{n_j} Y_{ij}, \phantom{11} j = 1, \ldots, 12.$$`
+
+- Como a soma dos `\(\hat{Z}_{.j}\)` em geral não é zero, toma-se como estimativas das constantes sazonais
+
+`$$\hat{S}_j = \bar{Y}_{.j} - \bar{Y},$$`
+
+em que `\(\bar{Y} = \frac{1}{12}\sum_{j=1}^{12}\bar{Y}_{.j}\)`.
+
+---
+##Sazonalidade estocástica 
+
+###Série livre de sazonalidade
+
+`$$Z^{SA} = Z_t - \hat{S}_t$$`
+
+
+
+---
+class: middle
+#Exemplo de Sazonalidade Estocástica
+
+- Como foi visto, considerando o modelo de decomposição
+
+`$$Z_t = T_t + S_t + a_t,$$`
+
+ao estimarmos `\(T_t\)`, por meio de uma média móvel `\(\hat{T}_t\)`, teremos uma série residual `\(Y_t = Z_t - \hat{T}_t.\)` Esta série fornecerá meios para estimar `\(S_t\)`.
+
+---
+class: middle
+#Exemplo de Sazonalidade Estocástica
+
+- Primeiro passo, obter as séries residuais
+
+
+
+
+```r
+dat = read.csv("dados.csv", header = TRUE)
+dados = ts(dat$Resp*1000,frequency=12, start=c(1969,1))
+
+Tt = ma(dados, order = 6, centre = TRUE)
+Yt =  dados - Tt
+```
+
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Segundo passo, calcular médias dos resíduos por meses: janeiros, fevereiros e etc ... `\(\bar{Y}_{.j} = \frac{1}{n_j} \sum_{i=1}^{n_{ij}} Y_{ij}, \phantom{11} j = 1, \ldots, 12.\)`
+
+####Média dos meses
+
+```
+##      jan      fev      mar      abr      mai      jun      jul      ago 
+## -395.381 -710.024  215.333 -172.469  -90.031  -83.000  387.125  234.583 
+##      set      out      nov      dez 
+##  -89.083  706.405  117.857 -113.333
+```
+
+---
+class: middle
+#Estimar Sazonalidade
+
+- Terceiro passo: Estimar a média geral dos resíduos ;
+
+####Média Geral
+
+```
+## [1] 0.665
+```
+
+
+
+####Estimar componentes sazonalidades
+
+- Quarto Passo: Estimar as estimativas das constantes sazonais `\(\hat{S}_j = \bar{Y}_{.j} - \bar{Y}\)`.
+
+
+
+```
+##      jan      fev      mar      abr      mai      jun      jul      ago 
+## -396.046 -710.689  214.668 -173.134  -90.696  -83.665  386.460  233.918 
+##      set      out      nov      dez 
+##  -89.749  705.740  117.192 -113.999
+```
+
+
+
+
+---
+class: middle
+#Série Livre de Sazonalidade
+
+- Série livre de tendência: `\(Z_t - \hat{S}_t\)`.
+
+![](Aula_9_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,144 @@
+---
+title: "Trabalhos sobre Tendência e Sazonalidade "
+subtitle: "Alguns comentários"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+
+---
+class: middle
+#Introdução
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+library(tsibble)
+```
+
+
+
+
+---
+class: middle
+###Análise  1 - Série $A_{11}$
+
+- Considere a Série $A_{11}$ (Consumo). Vendas físicas na região metropolitana de São Paulo, observações mensais de janeiro de 1984 a dezembro de 1995.
+
+#####Obs:
+
+- A série original têm observações mensais de janeiro de 1984 a outubro de 1996. No entanto, eu vou seguir a sugestão feita pelos alunos.
+
+###Objetivo da Análise
+
+a.  Estimar o componente de tendência $T_t$ no modelo. 
+
+b.  Obter uma série livre de tendência 
+
+c.  Estimar o componente de sazonalidade. 
+
+d.  Obter uma série livre de sazonalidade.
+
+---
+class: middle
+#Gráfico da Série - Estimar Tendência 
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+
+dat = read.csv("consumo.csv", header = TRUE)
+dat = as_tibble(dat)
+dat$data = seq(ymd("1984-01-01"), ymd("1996-10-01"), by="month")
+dat  = filter(dat, data <= as.Date("1995-12-01"))
+
+
+x = ts(dat$consumo, start=c(1984,1), frequency=12)
+tempo = 1:length(x) 
+y = as.vector(x)
+
+loessMod02 <- loess(x~tempo, span=0.3, 
+                    degree = 1)
+smoothed02 <- predict(loessMod02) 
+#plot(tempo,y,type = "l")
+#lines(tempo,smoothed02, col = "red")
+
+liv<- x - smoothed02 
+
+
+par(mfrow=c(2,1))
+plot(tempo,y,type = "l")
+lines(tempo,smoothed02, col = "red")
+title("Série Original e estimativa de tendência")
+plot(liv)
+title("Série Livre de tendência")
+```
+
+
+
+---
+class: middle
+#Estimar Sazonalidade 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+dat %>% mutate( mes = month(dat$data),
+                tend = ma(dat$consumo, order = 13, centre = TRUE),
+                residuo = consumo - ma(dat$consumo, order = 13, centre = TRUE))
+
+consumo = dat$consumo
+tend = ma(dat$consumo, order = 21, centre = TRUE)
+residuo = consumo - tend
+media_meses = tapply(residuo, INDEX = month(dat$data), 
+                     FUN = mean, na.rm = TRUE)
+
+names(media_meses) = c("jan","fev","mar", "abr","mai","jun","jul","ago","set","out","nov","dez")
+round(media_meses,3)
+media_geral = mean(media_meses, na.rm=TRUE)
+round(media_geral,3)
+comp_sazonal = media_meses - media_geral
+names(comp_sazonal) = c("jan","fev","mar", "abr","mai","jun","jul","ago","set","out","nov","dez")
+round(comp_sazonal,3)
+
+
+dat5 = tibble(data = rep(dat$data,2),
+             consumo = c(dat$consumo,
+                        dat$consumo -  rep(comp_sazonal,12)
+                        ),
+              obs_estimadores = c(rep("consumo",nrow(dat)),
+                                  rep("Livre_Sazonalidade",nrow(dat))
+                        )
+)
+
+```
+
+
+---
+class: middle
+#Estimar Sazonalidade 
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ggplot(dat5, aes(data, consumo)) + 
+  geom_line(aes(y=consumo,col= obs_estimadores )) +  theme_bw() + xlab('Data (Mensal)') + 
+  ylab('Consumo')
+
+```
+
+
+
+

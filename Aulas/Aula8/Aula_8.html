@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 8 - Exercícios sobre Tendência</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 8 - Exercícios sobre Tendência
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-09-09)
+
+---
+
+##Revisão - Modelos de Regressão Linear Simples
+
+
+
+
+
+`$$z = \beta_0 + \beta_1 t + \epsilon$$`
+em que `\(y\)` é a variável resposta, `\(x\)` é a variável explanatória, `\(\epsilon_i\)` é o erro aleatório
+
+O modelo de regressão simples é linear nos parâmetros `\(\beta_0\)` e 
+`\(\beta_1\)`. No entanto, não é necessariamente linear nas variáveis `\(x\)`. Assim, modelos como  y = \beta_0 + \beta_1 \log{x} + \epsilon $ ainda são projetados como regressão linear simples.
+
+
+
+##Modelo de regressão para N observações
+
+
+`$$z_t = \beta_0 +  \beta_1 t + \epsilon_t,$$`
+---
+class: middle
+##Estimação - Método dos Mínimos Quadrados
+
+Considere `\(Q(\beta_0,\beta_1) = \sum_{t=1}^N (z_t - \beta_0 - \beta_1 t)^2\)`
+
+--
+ `$$\frac{\partial Q}{\partial \beta_0} = -2\sum_{t=1}^N (z_t - \beta_0 - \beta_1 t) = -2\left[ \sum_{t=1}^N z_t - N \beta_0 - \beta_1 \sum_{t=1}^N t\right]$$`
+
+--
+
+`$$\frac{\partial Q}{\partial \beta_1} = -2\sum_{t=1}^N (z_t - \beta_0 - \beta_1 t)t = -2\left[ \sum_{t=1}^N z_t t -  \beta_0\sum_{t=1}^N t - \beta_1 \sum_{t=1}^N t^2\right]$$`
+
+--
+
+Agora, fazendo `\(\frac{\partial Q}{\partial \beta_0} =0\)` e `\(\frac{\partial Q}{\partial \beta_1} =0\)`, nós obtemos o sistema de equações normais, ou seja,
+
+`\begin{align}
+\sum_{i=1}^N z_t - n \hat{\beta}_0 - \hat{\beta}_1 \sum_{t=1}^N t =&amp; 0 \\
+\sum_{i=1}^N z_t t -  \hat{\beta}_0\sum_{i=1}^N t - \hat{\beta}_1 \sum_{i=1}^N t^2 =&amp;0.
+\end{align}`
+
+
+---
+
+###Equações Normais
+
+`\begin{align}
+\sum_{i=1}^N z_t - N \hat{\beta}_0 - \hat{\beta}_1 \sum_{t=1}^N t =&amp; 0 \\
+\sum_{i=1}^N z_t t -  \hat{\beta}_0\sum_{t=1}^N t - \hat{\beta}_1 \sum_{i=1}^N t^2 =&amp;0.
+\end{align}`
+
+####Primeira linha
+
+--
+`$$N \hat{\beta}_0  = \sum_{t=1}^N z_t - \hat{\beta}_1 \sum_{t=1}^N t$$`
+--
+`$$\hat{\beta}_0 = \bar{z} -  \hat{\beta}_1 \bar{t}.$$`
+
+---
+####Segunda Linha
+
+--
+`$$\hat{\beta}_1 \sum_{t=1}^N t^2 = 
+\sum_{t=1}^N z_t t -  \hat{\beta}_0\sum_{t=1}^N t$$`
+
+
+--
+`$$\hat{\beta}_1 \sum_{t=1}^N t^2 = \sum_{t=1}^N z_t t -  (\bar{z} -  
+\hat{\beta}_1 \bar{t})\sum_{t=1}^N t$$`
+
+
+--
+`$$\hat{\beta}_1 \sum_{t=1}^N t^2 -  \hat{\beta}_1 \bar{t}\sum_{t=1}^N t = \sum_{t=1}^N z_i t -  \bar{z}\sum_{t=1}^N t$$`
+
+--
+`$$\hat{\beta}_1 (\sum_{t=1}^N t^2 -   \frac{(\sum_{t=1}^N t)^2}{N}) = \sum_{t=1}^N t z_t -   \frac{(\sum_{t=1}^N t \sum_{t=1}^{N}z_t)}{N}$$`
+
+--
+`$$\hat{\beta}_1 = \frac{\sum_{t=1}^N t z_t -   \frac{(\sum_{t=1}^N t\sum_{t=1}^{N}z_t)}{N}}{(\sum_{t=1}^N t^2 -   \frac{(\sum_{t=1}^Nt)^2}{N})}.$$`
+
+
+
+
+
+
+
+---
+class: middle
+#Exercício 1 (Exercício 7 no livro)
+
+- Considere a Série `\(A_{10}\)` (M-ICV)
+
+b.  estimate `\(T_t\)` no modelo, supondo `\(T_t = \beta_0 e^{\beta_1 t}\)`;
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+##Lendo os dados
+
+
+```r
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+```
+
+##Gráfico da série
+
+
+```r
+ggplot(dat, aes(x = Mes.ano, y = ICV)) + geom_path() + theme_bw()
+```
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+
+![](Aula_8_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+#Solução do Exercício 1 - item b (Exercício 7 no livro)
+
+- Estime `\(T_t\)`, supondo o seguinte modelo
+
+###Modelo Proposto
+`$$T_t = \beta_0 e^{\beta_1 t}$$`
+
+
+###Aplicando logaritmo em ambos os lados
+
+`\begin{align}
+\log\{T_t\} =&amp; \log\{\beta_0 e^{\beta_1 t}\} \\
+\log\{T_t\} =&amp; \log\{\beta_0\} + \log\{ e^{\beta_1 t}\} \\
+\log\{T_t\} =&amp; \theta_0 + \beta_1 t
+\end{align}`
+
+
+---
+class: middle
+####Solução do Exercício 1 - 
+
+
+```r
+mod = lm(I(log(ICV)) ~ Tempo, data = dat)
+summary(mod)
+```
+
+```
+## 
+## Call:
+## lm(formula = I(log(ICV)) ~ Tempo, data = dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.19337 -0.13148 -0.03261  0.11005  0.40729 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 4.005599   0.026196  152.91   &lt;2e-16 ***
+## Tempo       0.022322   0.000358   62.36   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.1461 on 124 degrees of freedom
+## Multiple R-squared:  0.9691,	Adjusted R-squared:  0.9688 
+## F-statistic:  3889 on 1 and 124 DF,  p-value: &lt; 2.2e-16
+```
+
+
+
+
+
+
+
+---
+class: middle
+####Solução do Exercício 1 -
+
+
+```r
+plot.ts(dat$ICV)
+predicted &lt;- predict(mod, type="r")    
+lines(dat$Tempo, exp(predicted), col = "blue")
+```
+
+![](Aula_8_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+####Solução do Exercício 1 - item b Conferir as respostas (Exercício 7 no livro)
+
+- Para ficar igual da [página](https://www.ime.usp.br/~pam/respcap3.pdf), deve-se fazer `\(\hat{\beta}_0 = e^{\hat{\theta_0}}\)` que é igual à 54.9046999.
+
+
+---
+class: middle
+#Exercício 2 (Exercício 12 no livro)
+
+
+- Utilize o método "lowess", com `\(p = 0.2,0.4,0.6\)`  para estimar a tendência das séries `\(A_7\)` - Temperatura na cidade de São Paulo.
+
+---
+##Solução
+
+```r
+atmosfera = read.csv("atmosfera.csv", header = TRUE)
+
+
+loessMod02 &lt;- loess(temperatura ~ tempo, data=atmosfera , span=0.2,
+                    degree=1) 
+loessMod04 &lt;- loess(temperatura ~ tempo, data=atmosfera , span=0.4,
+                    degree=1) 
+loessMod06 &lt;- loess(temperatura ~ tempo, data=atmosfera , span=0.6,
+                    degree=1) 
+```
+
+
+
+---
+##Valores Preditos
+
+
+```r
+smoothed02 &lt;- predict(loessMod02) 
+smoothed04 &lt;- predict(loessMod04) 
+smoothed06 &lt;- predict(loessMod06) 
+
+data.frame(
+  smoothed02,
+  smoothed04,
+  smoothed06
+)
+```
+
+```
+##     smoothed02 smoothed04 smoothed06
+## 1     18.52608   19.51304   19.99146
+## 2     18.53536   19.47975   19.94494
+## 3     18.54541   19.44693   19.89860
+## 4     18.55594   19.41452   19.85242
+## 5     18.56666   19.38246   19.80638
+## 6     18.57728   19.35068   19.76046
+## 7     18.58752   19.31913   19.71463
+## 8     18.59709   19.28773   19.66887
+## 9     18.60571   19.25644   19.62316
+## 10    18.61309   19.22517   19.57747
+## 11    18.61894   19.19388   19.53178
+## 12    18.62298   19.16250   19.48607
+## 13    18.62687   19.13097   19.44032
+## 14    18.63221   19.09922   19.39450
+## 15    18.63856   19.06720   19.34859
+## 16    18.64552   19.03483   19.30257
+## 17    18.65267   19.00206   19.25641
+## 18    18.65960   18.96883   19.21009
+## 19    18.66588   18.93507   19.16359
+## 20    18.67111   18.90072   19.11689
+## 21    18.67486   18.86572   19.06996
+## 22    18.67672   18.83000   19.02278
+## 23    18.67627   18.79351   18.97533
+## 24    18.67714   18.75689   18.92781
+## 25    18.68243   18.72080   18.88043
+## 26    18.69092   18.68516   18.83318
+## 27    18.70141   18.64992   18.78605
+## 28    18.71267   18.61500   18.73900
+## 29    18.72351   18.58035   18.69204
+## 30    18.73270   18.54590   18.64514
+## 31    18.73904   18.51159   18.59829
+## 32    18.74132   18.47735   18.55147
+## 33    18.73832   18.44311   18.50466
+## 34    18.72883   18.40881   18.45785
+## 35    18.71164   18.37438   18.41103
+## 36    18.69002   18.33977   18.36417
+## 37    18.66804   18.30490   18.31727
+## 38    18.64570   18.26971   18.27030
+## 39    18.62300   18.23414   18.22325
+## 40    18.59991   18.19812   18.17610
+## 41    18.57644   18.16159   18.12884
+## 42    18.55258   18.12448   18.08146
+## 43    18.52831   18.08672   18.03392
+## 44    18.50364   18.04826   17.98623
+## 45    18.47855   18.00902   17.93836
+## 46    18.45304   17.96895   17.89030
+## 47    18.42560   17.92922   17.84229
+## 48    18.39502   17.89096   17.79458
+## 49    18.36166   17.85396   17.74713
+## 50    18.32591   17.81805   17.69991
+## 51    18.28815   17.78303   17.65288
+## 52    18.24878   17.74872   17.60603
+## 53    18.20816   17.71493   17.55930
+## 54    18.16670   17.68149   17.51268
+## 55    18.12476   17.64819   17.46612
+## 56    18.08273   17.61485   17.41961
+## 57    18.04100   17.58129   17.37310
+## 58    17.99996   17.54731   17.32656
+## 59    17.95813   17.51274   17.27996
+## 60    17.91376   17.47739   17.23327
+## 61    17.86678   17.44106   17.18646
+## 62    17.81713   17.40358   17.13949
+## 63    17.76476   17.36475   17.09234
+## 64    17.70958   17.32439   17.04497
+## 65    17.65155   17.28231   16.99734
+## 66    17.59059   17.23833   16.94943
+## 67    17.52665   17.19225   16.90121
+## 68    17.45966   17.14389   16.85264
+## 69    17.38955   17.09307   16.80369
+## 70    17.31776   17.04118   16.75492
+## 71    17.24562   16.98966   16.70685
+## 72    17.17295   16.93846   16.65941
+## 73    17.09957   16.88749   16.61252
+## 74    17.02528   16.83668   16.56610
+## 75    16.94990   16.78594   16.52009
+## 76    16.87325   16.73522   16.47439
+## 77    16.79513   16.68442   16.42893
+## 78    16.71536   16.63348   16.38364
+## 79    16.63376   16.58232   16.33844
+## 80    16.55013   16.53085   16.29325
+## 81    16.46429   16.47902   16.24799
+## 82    16.38046   16.42674   16.20260
+## 83    16.30242   16.37393   16.15698
+## 84    16.22934   16.32051   16.11107
+## 85    16.16039   16.26643   16.06479
+## 86    16.09473   16.21159   16.01805
+## 87    16.03155   16.15592   15.97080
+## 88    15.97000   16.09934   15.92293
+## 89    15.90925   16.04179   15.87439
+## 90    15.84847   15.98318   15.82509
+## 91    15.78684   15.92343   15.77496
+## 92    15.72351   15.86248   15.72391
+## 93    15.65909   15.80041   15.67276
+## 94    15.59502   15.73741   15.62231
+## 95    15.53168   15.67355   15.57249
+## 96    15.46948   15.60891   15.52325
+## 97    15.40881   15.54354   15.47450
+## 98    15.35008   15.47753   15.42620
+## 99    15.29369   15.41093   15.37826
+## 100   15.24003   15.34383   15.33063
+## 101   15.18950   15.27630   15.28324
+## 102   15.14251   15.20840   15.23602
+## 103   15.09945   15.14020   15.18891
+## 104   15.06073   15.07178   15.14183
+## 105   15.02208   15.00320   15.09473
+## 106   14.97944   14.93454   15.04754
+## 107   14.93349   14.86586   15.00019
+## 108   14.88492   14.79724   14.95262
+## 109   14.83442   14.72875   14.90476
+## 110   14.78266   14.66046   14.85653
+## 111   14.73034   14.59244   14.80789
+## 112   14.67812   14.52475   14.75876
+## 113   14.62671   14.45747   14.70907
+## 114   14.57678   14.39068   14.65876
+## 115   14.52902   14.32443   14.60776
+## 116   14.48124   14.25983   14.55709
+## 117   14.43072   14.19782   14.50776
+## 118   14.37736   14.13826   14.45970
+## 119   14.32103   14.08100   14.41282
+## 120   14.26161   14.02591   14.36706
+## 121   14.19899   13.97282   14.32234
+## 122   14.13306   13.92161   14.27859
+## 123   14.06369   13.87211   14.23573
+## 124   13.99077   13.82420   14.19368
+## 125   13.91418   13.77772   14.15238
+## 126   13.83381   13.73252   14.11174
+## 127   13.74954   13.68848   14.07169
+## 128   13.66258   13.64543   14.03217
+## 129   13.57415   13.60323   13.99308
+## 130   13.48413   13.56174   13.95436
+## 131   13.39243   13.52081   13.91594
+## 132   13.29893   13.48031   13.87773
+## 133   13.20351   13.44007   13.83967
+## 134   13.10607   13.39996   13.80168
+## 135   13.00650   13.35984   13.76368
+## 136   12.90469   13.31956   13.72560
+## 137   12.80053   13.27897   13.68737
+## 138   12.69391   13.23792   13.64890
+## 139   12.59250   13.19732   13.61041
+## 140   12.50316   13.15811   13.57215
+## 141   12.42455   13.12029   13.53416
+## 142   12.35531   13.08381   13.49647
+## 143   12.29410   13.04865   13.45913
+## 144   12.23956   13.01478   13.42215
+## 145   12.19036   12.98217   13.38558
+## 146   12.14514   12.95080   13.34946
+## 147   12.10255   12.92063   13.31381
+## 148   12.06124   12.89165   13.27867
+## 149   12.01987   12.86381   13.24407
+## 150   11.97709   12.83709   13.21005
+## 151   11.93666   12.81147   13.17664
+## 152   11.90332   12.78692   13.14388
+## 153   11.87718   12.76340   13.11180
+## 154   11.85835   12.74089   13.08044
+## 155   11.84695   12.71936   13.04982
+## 156   11.84307   12.69878   13.01999
+## 157   11.84684   12.67913   12.99097
+## 158   11.85836   12.66037   12.96281
+## 159   11.87774   12.64248   12.93553
+## 160   11.90509   12.62543   12.90917
+## 161   11.94053   12.60919   12.88377
+## 162   11.97548   12.59215   12.85906
+## 163   12.00282   12.57289   12.83478
+## 164   12.02486   12.55169   12.81098
+## 165   12.04388   12.52882   12.78766
+## 166   12.06217   12.50454   12.76487
+## 167   12.08204   12.47913   12.74264
+## 168   12.10576   12.45286   12.72100
+## 169   12.13563   12.42600   12.69997
+## 170   12.17395   12.39883   12.67958
+## 171   12.22301   12.37160   12.65987
+## 172   12.28510   12.34460   12.64087
+## 173   12.35112   12.31810   12.62261
+## 174   12.41065   12.29237   12.60511
+## 175   12.46398   12.26767   12.58842
+## 176   12.51140   12.24428   12.57255
+## 177   12.55321   12.22247   12.55753
+## 178   12.58970   12.20252   12.54341
+## 179   12.62117   12.18469   12.53020
+## 180   12.64792   12.16925   12.51794
+## 181   12.67022   12.15647   12.50666
+## 182   12.68839   12.14664   12.49639
+## 183   12.70271   12.14001   12.48716
+## 184   12.71455   12.13594   12.47904
+## 185   12.72462   12.13350   12.47209
+## 186   12.73223   12.13256   12.46626
+## 187   12.73671   12.13298   12.46154
+## 188   12.73737   12.13463   12.45790
+## 189   12.73351   12.13738   12.45531
+## 190   12.72447   12.14108   12.45374
+## 191   12.70956   12.14561   12.45318
+## 192   12.68808   12.15083   12.45358
+## 193   12.65937   12.15660   12.45492
+## 194   12.62272   12.16279   12.45719
+## 195   12.57747   12.16927   12.46034
+## 196   12.52777   12.17589   12.46436
+## 197   12.47808   12.18254   12.46922
+## 198   12.42818   12.18906   12.47488
+## 199   12.37783   12.19532   12.48133
+## 200   12.32680   12.20120   12.48854
+## 201   12.27485   12.20655   12.49648
+## 202   12.22176   12.21125   12.50512
+## 203   12.16728   12.21515   12.51443
+## 204   12.11120   12.21812   12.52440
+## 205   12.05327   12.22002   12.53499
+## 206   11.99326   12.22073   12.54618
+## 207   11.93583   12.22204   12.55848
+## 208   11.88537   12.22575   12.57240
+## 209   11.84127   12.23173   12.58784
+## 210   11.80289   12.23985   12.60475
+## 211   11.76961   12.24998   12.62304
+## 212   11.74081   12.26200   12.64264
+## 213   11.71587   12.27576   12.66347
+## 214   11.69415   12.29114   12.68546
+## 215   11.67504   12.30801   12.70854
+## 216   11.65790   12.32624   12.73263
+## 217   11.64213   12.34569   12.75765
+## 218   11.62708   12.36625   12.78354
+## 219   11.61513   12.38777   12.81021
+## 220   11.60900   12.41013   12.83759
+## 221   11.60863   12.43319   12.86560
+## 222   11.61396   12.45683   12.89418
+## 223   11.62490   12.48092   12.92325
+## 224   11.64141   12.50532   12.95273
+## 225   11.66340   12.52991   12.98255
+## 226   11.69081   12.55455   13.01262
+## 227   11.72357   12.57911   13.04289
+## 228   11.76161   12.60347   13.07327
+## 229   11.80487   12.62749   13.10369
+## 230   11.85021   12.65136   13.13428
+## 231   11.89502   12.67545   13.16526
+## 232   11.94002   12.69988   13.19665
+## 233   11.98593   12.72479   13.22848
+## 234   12.03347   12.75032   13.26078
+## 235   12.08337   12.77661   13.29359
+## 236   12.13634   12.80379   13.32692
+## 237   12.19311   12.83199   13.36081
+## 238   12.25439   12.86136   13.39528
+## 239   12.32092   12.89203   13.43038
+## 240   12.39340   12.92413   13.46612
+## 241   12.47257   12.95780   13.50254
+## 242   12.55462   12.99318   13.53966
+## 243   12.63536   13.03040   13.57751
+## 244   12.71492   13.06960   13.61613
+## 245   12.79344   13.11092   13.65554
+## 246   12.87105   13.15448   13.69577
+## 247   12.94787   13.20043   13.73686
+## 248   13.02405   13.24891   13.77882
+## 249   13.09971   13.30004   13.82169
+## 250   13.17499   13.35397   13.86551
+## 251   13.25001   13.41082   13.91029
+## 252   13.32492   13.47074   13.95606
+## 253   13.40036   13.53235   14.00228
+## 254   13.47667   13.59418   14.04838
+## 255   13.55354   13.65628   14.09439
+## 256   13.63066   13.71868   14.14034
+## 257   13.70771   13.78140   14.18626
+## 258   13.78438   13.84450   14.23218
+## 259   13.86035   13.90799   14.27814
+## 260   13.93532   13.97191   14.32415
+## 261   14.00896   14.03631   14.37026
+## 262   14.08096   14.10120   14.41648
+## 263   14.15101   14.16663   14.46285
+## 264   14.21938   14.23262   14.50941
+## 265   14.28660   14.29922   14.55617
+## 266   14.35271   14.36645   14.60317
+## 267   14.41780   14.43436   14.65044
+## 268   14.48193   14.50296   14.69801
+## 269   14.54516   14.57231   14.74591
+## 270   14.60756   14.64243   14.79417
+## 271   14.66919   14.71335   14.84281
+## 272   14.73012   14.78511   14.89187
+## 273   14.79041   14.85774   14.94138
+## 274   14.85013   14.93128   14.99137
+## 275   14.91179   15.00415   15.04158
+## 276   14.97763   15.07484   15.09176
+## 277   15.04729   15.14346   15.14191
+## 278   15.12042   15.21016   15.19203
+## 279   15.19667   15.27505   15.24214
+## 280   15.27568   15.33826   15.29225
+## 281   15.35710   15.39993   15.34236
+## 282   15.44057   15.46017   15.39249
+## 283   15.52575   15.51911   15.44263
+## 284   15.61228   15.57689   15.49281
+## 285   15.69981   15.63363   15.54302
+## 286   15.78798   15.68946   15.59328
+## 287   15.87597   15.74450   15.64359
+## 288   15.96331   15.79888   15.69396
+## 289   16.05020   15.85273   15.74441
+## 290   16.13684   15.90618   15.79494
+## 291   16.22343   15.95935   15.84555
+## 292   16.31018   16.01238   15.89626
+## 293   16.39728   16.06538   15.94707
+## 294   16.48493   16.11849   15.99800
+## 295   16.57333   16.17183   16.04905
+## 296   16.66268   16.22553   16.10023
+## 297   16.75318   16.27971   16.15155
+## 298   16.83955   16.33378   16.20303
+## 299   16.91710   16.38707   16.25469
+## 300   16.98692   16.43965   16.30652
+## 301   17.05009   16.49156   16.35850
+## 302   17.10770   16.54287   16.41061
+## 303   17.16084   16.59363   16.46285
+## 304   17.21059   16.64391   16.51520
+## 305   17.25805   16.69375   16.56764
+## 306   17.30430   16.74322   16.62016
+## 307   17.35043   16.79237   16.67275
+## 308   17.39752   16.84126   16.72539
+## 309   17.44666   16.88996   16.77807
+## 310   17.49619   16.93850   16.83077
+## 311   17.54326   16.98696   16.88348
+## 312   17.58725   17.03539   16.93619
+## 313   17.62751   17.08385   16.98889
+## 314   17.66339   17.13240   17.04155
+## 315   17.69426   17.18109   17.09416
+## 316   17.71948   17.22997   17.14672
+## 317   17.73839   17.27912   17.19920
+## 318   17.75037   17.32858   17.25159
+## 319   17.75476   17.37841   17.30388
+## 320   17.75093   17.42867   17.35605
+## 321   17.74666   17.47916   17.40828
+## 322   17.74931   17.52962   17.46072
+## 323   17.75767   17.58006   17.51336
+## 324   17.77050   17.63048   17.56618
+## 325   17.78657   17.68087   17.61916
+## 326   17.80466   17.73123   17.67228
+## 327   17.82354   17.78156   17.72553
+## 328   17.84197   17.83185   17.77887
+## 329   17.85872   17.88211   17.83230
+## 330   17.87257   17.93232   17.88579
+## 331   17.88228   17.98249   17.93933
+## 332   17.88663   18.03261   17.99290
+## 333   17.89571   18.08268   18.04647
+## 334   17.91882   18.13271   18.10003
+## 335   17.95351   18.18268   18.15356
+## 336   17.99735   18.23259   18.20704
+## 337   18.04790   18.28245   18.26046
+## 338   18.10272   18.33224   18.31378
+## 339   18.15937   18.38197   18.36700
+## 340   18.21542   18.43163   18.42009
+## 341   18.26841   18.48122   18.47304
+## 342   18.31592   18.53074   18.52582
+## 343   18.35551   18.58019   18.57842
+## 344   18.39256   18.62936   18.63098
+## 345   18.43362   18.67806   18.68365
+## 346   18.47800   18.72635   18.73641
+## 347   18.52500   18.77426   18.78926
+## 348   18.57394   18.82182   18.84219
+## 349   18.62412   18.86907   18.89519
+## 350   18.67486   18.91605   18.94825
+## 351   18.72545   18.96280   19.00135
+## 352   18.77520   19.00935   19.05451
+## 353   18.82343   19.05574   19.10769
+## 354   18.86944   19.10201   19.16090
+## 355   18.91652   19.14820   19.21412
+## 356   18.96793   19.19434   19.26735
+## 357   19.02301   19.24048   19.32057
+## 358   19.08104   19.28664   19.37378
+## 359   19.14134   19.33287   19.42697
+## 360   19.20322   19.37921   19.48013
+## 361   19.26598   19.42568   19.53325
+## 362   19.32893   19.47233   19.58631
+## 363   19.39138   19.51920   19.63932
+## 364   19.45263   19.56633   19.69226
+## 365   19.51200   19.61374   19.74513
+```
+
+
+---
+##Gráficos
+
+
+
+```r
+plot(atmosfera$tempo, atmosfera$temperatura, type="l", main="", xlab="Tempo", ylab="Temperatura")
+lines(smoothed02, x=atmosfera$tempo, col="red")
+lines(smoothed04, x=atmosfera$tempo, col="green")
+lines(smoothed06, x=atmosfera$tempo, col="blue")
+legend("topleft", legend=c("20%", "40%", "60%"),
+       col=c("red", "green","blue"), lty=c(1,1,1), cex=0.8)
+```
+
+
+---
+##Gráficos
+
+
+![](Aula_8_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

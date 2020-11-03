@@ -1,0 +1,282 @@
+---
+title: "Aula 8 - Exercícios sobre Tendência "
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+
+---
+##Revisão - Modelos de Regressão Linear Simples
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggpmisc)
+library(knitr)
+library(kableExtra)
+library(lubridate)
+library(zoo)
+library(httr)
+library(xlsx)
+library(fpp2)
+```
+
+
+$$z = \beta_0 + \beta_1 t + \epsilon$$
+em que $y$ é a variável resposta, $x$ é a variável explanatória, $\epsilon_i$ é o erro aleatório
+
+O modelo de regressão simples é linear nos parâmetros $\beta_0$ e 
+$\beta_1$. No entanto, não é necessariamente linear nas variáveis $x$. Assim, modelos como  y = \beta_0 + \beta_1 \log{x} + \epsilon $ ainda são projetados como regressão linear simples.
+
+
+
+##Modelo de regressão para N observações
+
+
+$$z_t = \beta_0 +  \beta_1 t + \epsilon_t,$$
+---
+class: middle
+##Estimação - Método dos Mínimos Quadrados
+
+Considere $Q(\beta_0,\beta_1) = \sum_{t=1}^N (z_t - \beta_0 - \beta_1 t)^2$
+
+--
+ $$\frac{\partial Q}{\partial \beta_0} = -2\sum_{t=1}^N (z_t - \beta_0 - \beta_1 t) = -2\left[ \sum_{t=1}^N z_t - N \beta_0 - \beta_1 \sum_{t=1}^N t\right]$$
+
+--
+
+$$\frac{\partial Q}{\partial \beta_1} = -2\sum_{t=1}^N (z_t - \beta_0 - \beta_1 t)t = -2\left[ \sum_{t=1}^N z_t t -  \beta_0\sum_{t=1}^N t - \beta_1 \sum_{t=1}^N t^2\right]$$
+
+--
+
+Agora, fazendo $\frac{\partial Q}{\partial \beta_0} =0$ e $\frac{\partial Q}{\partial \beta_1} =0$, nós obtemos o sistema de equações normais, ou seja,
+
+\begin{align}
+\sum_{i=1}^N z_t - n \hat{\beta}_0 - \hat{\beta}_1 \sum_{t=1}^N t =& 0 \\
+\sum_{i=1}^N z_t t -  \hat{\beta}_0\sum_{i=1}^N t - \hat{\beta}_1 \sum_{i=1}^N t^2 =&0.
+\end{align}
+
+
+---
+
+###Equações Normais
+
+\begin{align}
+\sum_{i=1}^N z_t - N \hat{\beta}_0 - \hat{\beta}_1 \sum_{t=1}^N t =& 0 \\
+\sum_{i=1}^N z_t t -  \hat{\beta}_0\sum_{t=1}^N t - \hat{\beta}_1 \sum_{i=1}^N t^2 =&0.
+\end{align}
+
+####Primeira linha
+
+--
+$$N \hat{\beta}_0  = \sum_{t=1}^N z_t - \hat{\beta}_1 \sum_{t=1}^N t$$
+--
+$$\hat{\beta}_0 = \bar{z} -  \hat{\beta}_1 \bar{t}.$$
+
+---
+####Segunda Linha
+
+--
+$$\hat{\beta}_1 \sum_{t=1}^N t^2 = 
+\sum_{t=1}^N z_t t -  \hat{\beta}_0\sum_{t=1}^N t$$
+
+
+--
+$$\hat{\beta}_1 \sum_{t=1}^N t^2 = \sum_{t=1}^N z_t t -  (\bar{z} -  
+\hat{\beta}_1 \bar{t})\sum_{t=1}^N t$$
+
+
+--
+$$\hat{\beta}_1 \sum_{t=1}^N t^2 -  \hat{\beta}_1 \bar{t}\sum_{t=1}^N t = \sum_{t=1}^N z_i t -  \bar{z}\sum_{t=1}^N t$$
+
+--
+$$\hat{\beta}_1 (\sum_{t=1}^N t^2 -   \frac{(\sum_{t=1}^N t)^2}{N}) = \sum_{t=1}^N t z_t -   \frac{(\sum_{t=1}^N t \sum_{t=1}^{N}z_t)}{N}$$
+
+--
+$$\hat{\beta}_1 = \frac{\sum_{t=1}^N t z_t -   \frac{(\sum_{t=1}^N t\sum_{t=1}^{N}z_t)}{N}}{(\sum_{t=1}^N t^2 -   \frac{(\sum_{t=1}^Nt)^2}{N})}.$$
+
+
+
+
+
+
+
+---
+class: middle
+#Exercício 1 (Exercício 7 no livro)
+
+- Considere a Série $A_{10}$ (M-ICV)
+
+b.  estimate $T_t$ no modelo, supondo $T_t = \beta_0 e^{\beta_1 t}$;
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+
+##Lendo os dados
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+
+```
+
+##Gráfico da série
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+
+ggplot(dat, aes(x = Mes.ano, y = ICV)) + geom_path() + theme_bw()
+
+```
+
+
+---
+class: middle
+#Solução do Exercício 1 (Exercício 7 no livro)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+dat =  read.csv("ICV.csv", header=TRUE)
+
+```
+
+```{r, echo =  FALSE, warning=FALSE, message=FALSE}
+
+plot.ts(dat$ICV)
+
+```
+
+---
+class: middle
+#Solução do Exercício 1 - item b (Exercício 7 no livro)
+
+- Estime $T_t$, supondo o seguinte modelo
+
+###Modelo Proposto
+$$T_t = \beta_0 e^{\beta_1 t}$$
+
+
+###Aplicando logaritmo em ambos os lados
+
+\begin{align}
+\log\{T_t\} =& \log\{\beta_0 e^{\beta_1 t}\} \\
+\log\{T_t\} =& \log\{\beta_0\} + \log\{ e^{\beta_1 t}\} \\
+\log\{T_t\} =& \theta_0 + \beta_1 t
+\end{align}
+
+
+---
+class: middle
+####Solução do Exercício 1 - 
+
+```{r}
+mod = lm(I(log(ICV)) ~ Tempo, data = dat)
+summary(mod)
+```
+
+
+
+
+
+
+
+---
+class: middle
+####Solução do Exercício 1 -
+
+```{r}
+
+plot.ts(dat$ICV)
+predicted <- predict(mod, type="r")    
+lines(dat$Tempo, exp(predicted), col = "blue")
+
+```
+
+---
+class: middle
+####Solução do Exercício 1 - item b Conferir as respostas (Exercício 7 no livro)
+
+- Para ficar igual da [página](https://www.ime.usp.br/~pam/respcap3.pdf), deve-se fazer $\hat{\beta}_0 = e^{\hat{\theta_0}}$ que é igual à `r exp(coef(mod)[1])`.
+
+
+---
+class: middle
+#Exercício 2 (Exercício 12 no livro)
+
+
+- Utilize o método "lowess", com $p = 0.2,0.4,0.6$  para estimar a tendência das séries $A_7$ - Temperatura na cidade de São Paulo.
+
+---
+##Solução
+```{r}
+
+atmosfera = read.csv("atmosfera.csv", header = TRUE)
+
+
+loessMod02 <- loess(temperatura ~ tempo, data=atmosfera , span=0.2,
+                    degree=1) 
+loessMod04 <- loess(temperatura ~ tempo, data=atmosfera , span=0.4,
+                    degree=1) 
+loessMod06 <- loess(temperatura ~ tempo, data=atmosfera , span=0.6,
+                    degree=1) 
+```
+
+
+
+---
+##Valores Preditos
+
+```{r}
+smoothed02 <- predict(loessMod02) 
+smoothed04 <- predict(loessMod04) 
+smoothed06 <- predict(loessMod06) 
+
+data.frame(
+  smoothed02,
+  smoothed04,
+  smoothed06
+)
+
+```
+
+
+---
+##Gráficos
+
+
+```{r, eval=FALSE}
+plot(atmosfera$tempo, atmosfera$temperatura, type="l", main="", xlab="Tempo", ylab="Temperatura")
+lines(smoothed02, x=atmosfera$tempo, col="red")
+lines(smoothed04, x=atmosfera$tempo, col="green")
+lines(smoothed06, x=atmosfera$tempo, col="blue")
+legend("topleft", legend=c("20%", "40%", "60%"),
+       col=c("red", "green","blue"), lty=c(1,1,1), cex=0.8)
+
+```
+
+
+---
+##Gráficos
+
+
+```{r, echo=FALSE}
+plot(atmosfera$tempo, atmosfera$temperatura, type="l", main="", xlab="Tempo", ylab="Temperatura")
+lines(smoothed02, x=atmosfera$tempo, col="red")
+lines(smoothed04, x=atmosfera$tempo, col="green")
+lines(smoothed06, x=atmosfera$tempo, col="blue")
+legend("topleft", legend=c("20%", "40%", "60%"),
+       col=c("red", "green","blue"), lty=c(1,1,1), cex=0.8)
+
+```

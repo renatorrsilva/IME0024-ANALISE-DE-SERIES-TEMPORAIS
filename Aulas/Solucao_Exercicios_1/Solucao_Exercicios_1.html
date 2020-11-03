@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Solução dos Exercícios 1 - Modelos ARIMA</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Solução dos Exercícios 1 - Modelos ARIMA
+## Exercícios adaptados do capítulo 5 - livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-10-28)
+
+---
+
+class: middle
+##Exercícios
+
+1 - Escreva os seguintes modelos na forma `\(\phi(B)Z_t = a_t,\)` ou `\(Z_t = \theta(B)a_t,\)` ou
+`\(\phi(B)Z_t = \theta(B)a_t.\)`
+
+b.  `$$\tilde{Z}_t = a_t + 0.8 a_{t-1}$$`
+
+--
+
+`$$\tilde{Z}_t = a_t + 0.8 B a_t$$`
+--
+
+`$$\tilde{Z}_t = (1 + 0.8 B) a_t$$`
+
+
+---
+class: middle
+##Exercícios
+
+
+c.  `$$\tilde{Z}_t = 0.3 \tilde{Z}_{t-1} -  0.6 \tilde{Z}_{t-2} + a_t$$`
+
+--
+
+`$$\tilde{Z}_t - 0.3 \tilde{Z}_{t-1} +  0.6 \tilde{Z}_{t-2}  = a_t$$`
+
+--
+
+`$$\tilde{Z}_t - 0.3 B \tilde{Z}_{t} +  0.6 B^2 \tilde{Z}_{t}  = a_t$$`
+
+--
+
+`$$(1 - 0.3 B  +  0.6 B^2) \tilde{Z}_{t}  = a_t$$`
+
+
+
+---
+class: middle
+##Exercícios
+
+
+d.  `$$\tilde{Z}_t - 0.4 \tilde{Z}_{t-1} = a_t  - 0.3 a_{t-1} + 0.8 a_{t-2}$$`
+
+--
+
+$$\tilde{Z}_t - 0.4 B  \tilde{Z}_t = a_t - 0.3 B a_t + 0.8 B^2 a_t  $$
+
+--
+
+$$(1 - 0.4 B ) \tilde{Z}_t = (1 - 0.3 B  + 0.8 B^2) a_t  $$
+
+
+
+---
+class: middle
+##Exercícios
+
+
+e.  `$$Z_t = 1.5 Z_{t-1} - 0.75 Z_{t-2} + a_t + 4.0$$`
+
+
+--
+
+`$$Z_t = 1.5 B Z_t - 0.75 B^2 Z_t + a_t + 4.0$$`
+
+--
+
+`$$Z_t = 1.5 B Z_t - 0.75 B^2 Z_t + a_t + 4.0$$`
+
+--
+
+`$$Z_t - 1.5 B Z_t + 0.75 B^2 Z_t = a_t + 4.0$$`
+
+
+--
+
+`$$(1 - 1.5 B  + 0.75 B^2) Z_t = a_t + 4.0$$`
+
+
+
+
+
+---
+class: middle
+##Exercícios
+
+
+f.  `$$\tilde{Z}_t  = 0.3 a_{t-1} + 0.6 a_{t-2} + a_t.$$`
+
+
+--
+
+`$$\tilde{Z}_t  = 0.3 B a_{t} + 0.6 B^2 a_{t} + a_t.$$`
+
+--
+
+`$$\tilde{Z}_t  = (1 + 0.3 B + 0.6 B^2)a_t.$$`
+
+
+---
+class: middle
+##Exercícios
+
+2 - Verifique se cada um dos modelos do Problema 1 é: 
+a) estacionário b) invertível. Justifique a sua resposta
+
+###Condições de Estacionariedade
+ 
+ - Modelos de médias móveis são estacionários, e modelos autoregressivos são estacionários se as raízes do polinômio `\(\phi(B) = 0\)` cair fora do círculo unitário
+ 
+ - Para o `\(AR(1)\)`, isso equivale à `\(-1 &lt; \phi &lt; 1\)` e `\(AR(2)\)` isso equivale à `\(\phi_1 + \phi_2 &lt; 1,\)` `\(\phi_2 - \phi_1 &lt; 1,\)` `\(-1 &lt; \phi_2 &lt; 1.\)`
+
+###Condições de Invertibildidade
+
+- Modelos autoregressivos são sempre invertíveis. Modelos de médias móveis são invertíveis se as raízes do polinômio `\(\theta(B) = 0\)` cair fora do círculo unitário.  Para o `\(MA(1)\)`, isso equivale à `\(-1 &lt; \theta &lt; 1\)` e `\(AR(2)\)` isso equivale à `\(\theta_1 + \theta_2 &lt; 1,\)` `\(\theta_2 - \theta_1 &lt; 1,\)` `\(-1 &lt; \theta_2 &lt; 1.\)`
+
+
+---
+class: middle
+##Exercícios
+
+2 - Verifique se cada um dos modelos do Problema 1 é: 
+
+
+b.  Estacionário e Invertível
+
+c.  Invertível e Estacionário  
+
+d.  Estacionário e Invertível  
+
+e.  Não Estacionário e Invertível
+
+f.  Estacionário e Invertível
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

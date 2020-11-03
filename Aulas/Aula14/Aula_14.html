@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 14 - Trabalho de Modelos de Suavização Exponencial</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 14 - Trabalho de Modelos de Suavização Exponencial
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-10-14)
+
+---
+
+class: middle, inverse, center
+#Métodos de suavização
+
+
+---
+class: middle, 
+
+
+
+
+
+##Métodos de suavização exponencial simples (SES)
+
+`$$\bar{Z}_t = \alpha Z_t + (1 - \alpha) \bar{Z}_{t-1}, \phantom{111} \bar{Z_0} = Z_1, \phantom{111} t = 1, \ldots, N.$$`
+
+- Quanto menor for o valor de `\(\alpha\)` mais estáveis serão as previsões finais, uma vez que a utilização de baixo valor de `\(\alpha\)` implica que pesos maiores serão dados as observações passadas.
+
+- Valores de `\(\alpha\)` baixo, indicado para séries altamente aleatórias.
+
+####Previsão
+
+`$$\hat{Z}_t(h) = \bar{Z}_t.$$`
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+
+`\begin{align}
+\bar{Z}_t =&amp; AZ_t + (1-A)(\bar{Z}_{t-1} +\hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N, \\
+\bar{T}_t =&amp; C(\bar{Z}_t - \bar{Z}_{t-1}) + (1-C)\hat{T}_{t-1}, \phantom{11} 0 &lt; C &lt; 1, \phantom{11} \mbox{e} \phantom{11} t = 2, \ldots, N.
+\end{align}`
+em que `\(A\)` e `\(C\)` são constantes de suavização.
+
+
+####Previsão
+
+`$$\hat{Z}_{t + h} = \bar{Z}_t + h \hat{T}_t, \forall h &gt; 0,$$`
+
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Multiplicativa 
+
+`\begin{align}
+\hat{F}_t =&amp; D\left(\frac{Z_t}{\bar{Z}_t}\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 &lt; D &lt; 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\bar{Z}_t =&amp; A\left(\frac{Z_t}{\hat{F}_{t-s}}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{111}, t = s + 1, \ldots, N. \\
+\hat{T}_t =&amp; C(\bar{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{111}, 0 &lt; C &lt; 1, \phantom{111} t = s+1, \ldots, N.
+\end{align}`
+
+####Previsão - Série Sazonal Multiplicativa
+
+
+`$$\hat{Z}_{t+h} = (\bar{Z}_t + h\hat{T}_t)\hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s$$`
+
+---
+class: middle
+#Método de suavização exponencial de Holt-Winters
+
+####Equações de Suavização - Série Sazonal Aditiva
+
+`\begin{align}
+\hat{F}_t =&amp; D\left(Z_t - \bar{Z}_t\right) + (1 - D) \hat{F}_{t - s}, \phantom{11} 0 &lt; D &lt; 1, \phantom{11} t = s + 1, \ldots, N. \\
+\bar{Z}_t =&amp; A\left(Z_t - \hat{F}_{t-s}\right) + (1 - A)(\bar{Z}_{t-1} + \hat{T}_{t-1}), \phantom{11} 0 &lt; A &lt; 1, \phantom{11} t = s + 1, \ldots, N. \\
+\hat{T}_t =&amp; C(\hat{Z}_t - \bar{Z}_{t-1}) + (1 - C)\hat{T}_{t-1}, \phantom{11} 0 &lt; C &lt; 1, \phantom{11} t = s+1, \ldots, N.
+\end{align}`
+
+####Previsão - Série Sazonal Aditiva
+
+`$$\hat{Z}_{t+h} = \bar{Z}_t + h\hat{T}_t + \hat{F}_{t+h-s}, \phantom{111} h = 1,2, \ldots, s.$$`
+
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+- Vamos aplicar o método de médias móveis à série `\(A_6\)` `\(NO_2\)`, no período de primeiro de janeiro a 18 de abril de 1997.
+
+- Vamos prever os valores de 19 a 30 de abril de 1997.
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+![](Aula_14_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+
+```r
+alpha.val = seq(0.1,0.9, by=0.01)
+
+MSE = list()
+
+for(i in 1:length(alpha.val)){
+  SES = HoltWinters(datNO2, beta=FALSE, gamma=FALSE, alpha=alpha.val[i])
+  MSE[[i]]=  mean( c(as.vector(forecast(SES,h=12)$mean) - datNO2_tst)^2)
+ }
+
+alpha.opt = alpha.val[ which.min(unlist(MSE))]
+```
+
+
+---
+class: middle
+
+
+
+```
+##   alpha.val round.unlist.MSE...2.
+## 1      0.10               1511.80
+## 2      0.11               1536.96
+## 3      0.12               1564.37
+## 4      0.13               1593.10
+## 5      0.14               1622.20
+## 6      0.15               1650.86
+```
+
+
+---
+class: middle
+
+
+![](Aula_14_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+Valor de alpha 0.76
+
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+
+```r
+forecast(mod , h=12) %&gt;% autoplot
+```
+  
+
+---
+class: middle
+##Métodos suavização exponencial simples - Aplicação
+
+![](Aula_14_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+- Vamos analisar a série `\(A_{10}\)` (M-ICV), índice de custo de vida no município de São Paulo; que originalmente possui observações mensais de janeiro de 1970 a junho de 1980.
+
+- Por questões didáticas, vamos analisar a série no período de janeiro de 1970 (t=1) a junho de 1979 (t=114), ou seja, isolamos as 12 ultimas observações com o objetivo de comparar as previsões com os respectivos valores reais.
+
+---
+class: middle
+
+
+
+
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+![](Aula_14_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+
+```r
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+
+alphaBeta.grid = expand.grid(alpha.val,beta.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBeta.grid )){
+  SEH = HoltWinters(datM_ICV, beta=alphaBeta.grid[i,2], gamma=FALSE, alpha=alphaBeta.grid[i,1])
+  MSE[[i]]=  mean( c(as.vector(forecast(SEH,h=12)$mean) - datM_ICV_tst)^2)
+ }
+
+alphaBeta.opt = alphaBeta.grid[ which.min(unlist(MSE)), ]
+```
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+
+```
+##   Var1 Var2 round.unlist.MSE...2.
+## 1 0.10  0.1              73427.77
+## 2 0.15  0.1              62988.73
+## 3 0.20  0.1              57130.16
+## 4 0.25  0.1              53357.87
+## 5 0.30  0.1              50731.73
+## 6 0.35  0.1              48792.40
+```
+
+
+
+
+---
+class: middle
+
+
+![](Aula_14_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+Valor de alpha 0.3, 0.9
+
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+
+```r
+forecast(mod , h=12) %&gt;% autoplot
+```
+  
+
+---
+class: middle
+##Método de suavização exponencial de Holt
+
+![](Aula_14_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+```r
+x = c(7.78,7.351,8.317,8.036, 8.424,8.3,8.985, 8.589, 8.564,8.614, 8.102,8.044,
+      8.209, 7.738, 8.828, 9.150,8.960, 9.282, 9.934, 9.546, 9.572, 10.272, 9.991, 9.537,
+      8.761, 8.501, 9.642, 9.058, 9.256, 9.799, 10.828, 11.063, 10.652, 11.278, 10.661, 10.500,
+      9.759, 9.876, 10.664,10.110, 11.055,11.615, 11.730, 12.587,12.046, 12.852, 12.259, 12.214,
+      11.798, 11.278, 11.945, 11.695, 12.734, 13.405, 13.836, 14.388, 14.069, 15.519, 14.680, 14.104,
+      13.577, 12.451, 13.856, 13.812, 14.280, 13.692, 15.502, 15.423, 14.947, 16.031,14.462, 13.791,
+      14.829, 15.297, 16.330, 15.807, 16.623, 17.196, 17.691, 18.012, 17.625, 18.244, 17.102, 16.744,
+      15.385, 15.062, 17.896, 16.262, 17.820, 17.911, 17.818, 18.410, 17.658, 18.273, 17.922, 16.987,
+      16.681, 15.886, 18.281, 17.478, 18.412, 18.849, 19.023, 20.372, 19.262, 20.570, 19.304, 18.407,
+      18.633, 17.497, 19.470, 18.884, 20.308, 20.146, 20.258, 21.614, 19.717, 22.133, 20.503, 18.800,
+      19.577, 18.992, 21.022, 19.064,21.067, 21.553, 22.513)
+
+datM_IPI = ts(x[1:115], c(1969,1), frequency=12)
+
+datM_IPI_tst = x[116:127]
+```
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+![](Aula_14_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+```r
+alpha.val = seq(0.1,0.9, by=0.05)
+beta.val = seq(0.1,0.9, by=0.05)
+gamma.val = seq(0.1,0.9, by=0.05)
+
+alphaBetaGamma.grid = expand.grid(alpha.val,beta.val, gamma.val)
+
+MSE = list()
+
+for(i in 1:nrow(alphaBetaGamma.grid )){
+  HW= HoltWinters(datM_IPI, beta=alphaBetaGamma.grid[i,2], gamma=alphaBetaGamma.grid[i,3], alpha=alphaBetaGamma.grid[i,1],
+                    seasonal = c("multiplicative"))
+  MSE[[i]]=  mean( c(as.vector(forecast(HW,h=12)$mean) - datM_IPI_tst)^2)
+ }
+
+alphaBetaGamma.opt = alphaBetaGamma.grid[ which.min(unlist(MSE)), ]
+
+head(data.frame(alphaBetaGamma.opt, round(unlist(MSE),2)))
+```
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+```
+##   Var1 Var2 Var3 round.unlist.MSE...2.
+## 1  0.1  0.1  0.3                  0.44
+## 2  0.1  0.1  0.3                  0.43
+## 3  0.1  0.1  0.3                  0.45
+## 4  0.1  0.1  0.3                  0.50
+## 5  0.1  0.1  0.3                  0.61
+## 6  0.1  0.1  0.3                  0.79
+```
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+![](Aula_14_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+
+Valor de alpha 0.1, 0.1, 0.3
+
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+
+```r
+forecast(mod, h=12) %&gt;% autoplot
+```
+  
+
+---
+class: middle
+###Método de Holt Winters Série Multiplicativa 
+
+![](Aula_14_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

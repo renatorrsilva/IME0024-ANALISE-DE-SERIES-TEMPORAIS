@@ -1,0 +1,294 @@
+---
+title: "Aula 12 - Funções de Autocovariância e Autocorrelação. Estimadores da Média Amostral e Autocorrelação"
+subtitle: "Material baseado no livro Time Series Analysis: Univariate and Multivariate Methods (Willian W. S. Wei, 1990)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+#Funções de Autocovariância e de Autocorrelação - Introdução
+
+- Uma série temporal estacionária é caracterizada pela média $\mu$,
+variância $\sigma^2$, autocorrelações $\rho_k$, e autocorrelações
+parciais $\phi_{kk}.$
+
+- Os exatos valores destes parâmetros podem ser calculados se o *ensemble* de todas realizações fossem possível.
+
+- De outra forma, eles podem ser estimados se multiplas realizações
+independentes estejam disponíveis.
+
+- Na maioria das aplicações, entretanto, é difícil ou impossível de obter múltiplas observações.
+
+- Na prática, observamos apenas uma trajetória. Entretanto, para processos estacionários e ergódicos temos uma alternativa de substituir a média do ensemble pela média calculada ao longo do tempo.
+
+- Ergodicidade significa que a média do ensemble é igual à média calculada ao longo do tempo [https://en.wikipedia.org/wiki/Ergodic_process].
+
+      
+      
+      
+---
+#Funções de Autocovariância e de Autocorrelação
+
+##Pressuposições
+
+- Vamos assumir que o processo  $\left\{ Z_t, t \in \mathcal{Z} \right\}$ seja estacionário de segunda ordem 
+
+    - $E[Z_t] = \mu$; (média constante)
+    - $E[Z^2_t] < \infty, \phantom{11} \forall t \in \mathbf{Z}$; 
+    - $Cov[Z_{t}, Z_{s}]$ é uma função de $|t - s|$.
+
+Lembre-se se o processo for Gaussiano e  estacionário de segunda ordem, ele é estritamente estacionário.
+
+---
+class: middle
+
+##Função de Autocovariância    
+  
+\begin{equation}
+\gamma_k = Cov[Z_t, Z_{t+k}] = E[[Z_t - \mu][ Z_{t+k} - \mu]],
+\end{equation}
+
+##Função de Autocorrelação  
+  
+\begin{equation}
+\rho_k = \frac{Cov[Z_t, Z_{t+k}]}{\sqrt{Var[Z_t]}\sqrt{Var[Z_{t+k}]}} = \frac{\gamma_k}{\gamma_0}
+\end{equation}
+
+Note que $Var[Z_t] = Var[Z_{t+k}] = \gamma_0$, por pressuposição.
+
+---
+# Propriedades de Autocovariância e Autocorrelação
+
+a.  $\gamma_0 = Var[Z_t]; \rho_0 = 1$
+
+\begin{equation}
+\rho_0 = \frac{\gamma_0 }{\gamma_0 } = 
+\frac{Var[Z_t]}{Var[Z_t]} = 1
+\end{equation}
+
+
+b.  $|\gamma_k| \leq \gamma_0; |\rho_k| \leq 1$
+
+\begin{align}
+|\rho_k| &\leq 1 \Rightarrow -1 \leq \rho_k \leq 1 \Rightarrow 
+-1 \leq \frac{\gamma_k}{\gamma_0} \leq 1 \Rightarrow -\gamma_0 \leq \gamma_k \leq \gamma_0
+\end{align}
+
+c. $\gamma_k = \gamma_{-k}$ e $\rho_k = \rho_{-k}$ $\forall \phantom{i} k$, ou seja, $Cov[Z_t, Z_{t+k}] = Cov[Z_t, Z_{t-k}].$
+
+
+---
+class: middle
+## Propriedades de Autocovariância e Autocorrelação
+
+Assim é importante saber que nem toda função que satisfazem as propriedades (a) à (c) pode ser 
+autocovariância ou autocorrelação  para um processo.
+
+Uma condição necessária para uma função ser um autocovariância é a função ser positiva semidefinida.
+
+A prova desse fato pode ser vista [aqui](https://www.math-stat.unibe.ch/e237483/e237655/e243381/e281679/files281692/Chap13_ger.pdf).
+
+---
+class: middle, inverse, center
+#Média Amostral
+
+---
+class: middle
+##Média Amostral
+
+Com apenas uma única realização, um estimador natural para média $\mu = E[Z_t]$ de um processo estacionário é o estimador amostral
+\begin{equation}
+\bar{Z} = \frac{1}{n}\sum_{t=1}^n Z_t
+\end{equation}
+
+Pode-se mostrar que o valor esperado do estimador dá-se por:
+\begin{align}
+E[\bar{Z}] = E[\frac{1}{n}\sum_{t=1}^n Z_t] = \frac{1}{n}\sum_{t=1}^n E[Z_t] = \frac{1}{n}\sum_{t=1}^n \mu = \mu
+\end{align}
+
+E a variância é dada por:
+
+\begin{align}
+Var[\bar{Z}] =& \frac{1}{n^2}\sum_{t=1}^n \sum_{s=1}^nCov[Z_t, Z_s] \\
+=& \frac{\gamma_0}{n^2} \sum_{k=-(n-1)}^{n-1}(n - |k|)\rho_k = \frac{\gamma_0}{n} \sum_{k=-(n-1)}^{n-1}\left(1 - \frac{|k|}{n}\right)\rho_k.
+\end{align}
+
+
+
+---
+class: middle
+##Média Amostral
+
+
+Assim, se $\lim_{n \rightarrow \infty} \frac{\gamma_0}{n} \sum_{k= -(n-1)}^{n-1}\left(1 - \frac{|k|}{n}\right)\rho_k$ for finito, então $Var(\bar{Z}) \rightarrow 0$, quando $n \rightarrow \infty$ e $\bar{Z}$ é um estimador consistente em média quadrática para $\mu$ [consistência](https://bookdown.org/egarpor/inference/point-est.html#point-est-consistent), [consistência 2](https://en.wikipedia.org/wiki/Consistent_estimator#:~:text=In%20statistics%2C%20a%20consistent%20estimator,in%20probability%20to%20%CE%B80.)
+
+###Definição:
+
+Uma sequência de estimadores $\left\{ \theta_n: n \in \mathbb{N} \right\}$ é consistente em média quadrática para $\theta$ se
+
+$\lim_{n \rightarrow \infty} B\left[\hat{\theta}_n\right] = 0$ e
+$\lim_{n \rightarrow \infty} Var[\hat{\theta}_n] = 0.$
+
+Revisão de leis dos grandes números podem ser vistas [aqui](https://pt.wikipedia.org/wiki/Lei_dos_grandes_n%C3%BAmeros), [aqui](https://en.wikipedia.org/wiki/Law_of_large_numbers#Differences_between_the_weak_law_and_the_strong_law).
+
+Vídeo interessante [aqui](https://www.youtube.com/watch?v=Bn0wWZENeQI).
+Codigo no [R](https://rstudio-pubs-static.s3.amazonaws.com/202144_71c017d6692c47d885f452b41a89f100.html.)
+
+
+---
+## Função Autocovariância Amostral
+
+\begin{equation}
+\hat{\gamma}_k = \frac{1}{n}\sum_{i=1}^{n-k}(Z_t - \bar{Z})(Z_{t+k}-\bar{Z})
+\end{equation}
+
+Pode-se mostrar que 
+
+\begin{equation}
+E[\hat{\gamma}_k] \approx \gamma_k -  \frac{k}{n}\gamma_k - \left( \frac{n-k}{n}\right) Var(\bar{Z})
+\end{equation}
+é assintoticamente não viesado. Ou seja, para $n \rightarrow \infty$, $E[\hat{\gamma}_k] \rightarrow \gamma_k$. 
+
+Quando o processo for Gaussiano, pode-se demonstrar que 
+
+\begin{equation}
+Cov[\hat{\gamma}_k, \hat{\gamma}_{k+j}] \approx \frac{1}{n}\sum_{i=-\infty}^\infty(\gamma_i\gamma_{i+j} + \gamma_{i+k+j}\gamma_{i-k})
+\end{equation}
+e
+\begin{equation}
+Var[\hat{\gamma}_k] \approx \frac{1}{n}\sum_{i=-\infty}^\infty(\gamma_i^2 + \gamma_{i+k}\gamma_{i-k})
+\end{equation}
+
+
+
+
+---
+class: middle
+## Função de Autocorrelação Amostral
+
+\begin{equation}
+\hat{\rho}_k = \frac{\hat{\gamma}_k}{\hat{\gamma}_0} = \frac{\sum_{t=1}^{n-k}(Z_t - \bar{Z})(Z_{t+k} - \bar{Z})}{\sum_{t=1}^{n}(Z_t - \bar{Z})^2}
+\end{equation}
+
+Para $n$ suficientemente grande, $\hat{\rho}_k$ tem uma distribuição aproximadamente normal com média $\rho_k$ e variância
+
+\begin{equation}
+Var[\hat{\rho}_k] \approx \frac{1}{n}\sum_{i=-\infty}^{\infty}(\rho_i^2 + \rho_{i+k}\rho_{i-k} - 4\rho_k\rho_i\rho_{i-k} +  2\rho_k^2\rho_i^2)
+\end{equation}
+
+Para processos nos quais $\rho_k = 0$, para $k > m$, uma boa aproximação seria:
+
+\begin{equation}
+Var[\hat{\rho}_k] \approx \frac{1}{n}(1 + 2\rho_1^2 + 2\rho_{2}^2 + \ldots + 2\rho_m^2)
+\end{equation}
+
+---
+class: middle
+## Função de Autocorrelação Amostral
+
+Na prática, estimaremos $Var[\hat{\rho}_k]$ por meio de
+
+\begin{equation}
+S_{\rho_k} = \sqrt{\frac{1}{n}(1 + 2\hat{\rho}_1^2 + \ldots + 2\hat{\rho}_m^2)}
+\end{equation}
+
+---
+class: middle
+## Como Estimar a Autocorrelação Amostral
+
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tsibble)
+data("AirPassengers") 
+
+dataset = AirPassengers %>% as_tsibble() 
+head(dataset)
+
+```
+
+
+---
+class: middle
+## Como Estimar a Autocorrelação Amostral
+
+```{r, warning=FALSE, message=FALSE}
+
+#Dados originais (top 10)
+dataset$value[1:10]
+
+#Dados defasados (lag =1 )
+lag(dataset$value, 1)[1:10]
+
+#Dados defasados (lag =2 )
+lag(dataset$value, 2)[1:10]
+
+```
+
+---
+class: middle
+## Como Estimar a Autocorrelação Amostral
+
+```{r, warning=FALSE, message=FALSE}
+
+#Correlação entre Z_t e Z_{t-1} 
+cor(dataset$value,lag(dataset$value, 1),use="pairwise.complete.obs")
+
+#Correlação entre Z_t e Z_{t-1} 
+cor(dataset$value[-1],dataset$value[-144])
+
+#Use função acf do R
+acf(dataset$value, type="correlation", lag.max =1 ,plot = FALSE)
+
+```
+
+
+---
+## Diferenças entre cor e acf
+
+$$\hat{\rho}_k = \frac{\sum_{t=1}^{n-k} y_t y_{t+k}}{\sum_{t=1}^n y_t^2}$$
+em que $y_t = z_t - \bar{z}$.
+
+```{r, warning=FALSE, message=FALSE}
+#Como o R está calculando
+yt = (dataset$value - mean(dataset$value))
+
+sum(lag(yt,1)*yt, na.rm=T) / sum(yt^2)
+
+#Use função acf do R
+acf(dataset$value, type="correlation", lag.max =1 ,plot = FALSE)
+
+```
+
+
+---
+class: middle
+## Diferenças entre cor e acf
+
+Observe que a diferença entre os resultados da função `cor` e `acf` não é só o fator $(\frac{n-1}{n})$, como está explicado nesse website [datacamp](https://www.datacamp.com/community/tutorials/autocorrelation-r). 
+
+Detalhes adicionais podem ser encontrados nesse link [stackflow](https://stats.stackexchange.com/questions/81754/understanding-this-acf-output).
+
+---
+class: middle
+## Apenas Mais um Exemplo - Autocorrelação com lag = 2
+
+```{r, warning=FALSE, message=FALSE}
+
+cor(dataset$value,lag(dataset$value, 2),use="pairwise.complete.obs")
+
+acf(dataset$value, type="correlation", lag.max =2 ,plot = FALSE)
+
+#Como o R está calculando
+yt = (dataset$value - mean(dataset$value))
+
+sum(lag(yt,2)*yt, na.rm=T) / sum(yt^2)
+
+```
+

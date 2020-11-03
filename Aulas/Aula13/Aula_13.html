@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 13 - Modelos Lineares Estacionários</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 13 - Modelos Lineares Estacionários
+## Material fortemente baseado no livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-10-07)
+
+---
+
+class: middle
+##Operadores
+
+a.  Operadores translação para o passado, denotado por `\(B\)` e definido por:
+
+`\begin{equation}
+B Z_t = Z_{t-1}, \phantom{111} B^m Z_t = Z_{t-m};
+\end{equation}`
+
+b. Operador translação para o futuro, denotado por `\(F\)` e definido por:
+
+`\begin{equation}
+F Z_t = Z_{t+1}, \phantom{111} F^m Z_t = Z_{t+m}
+\end{equation}`
+
+c.  Operador diferença, já definido antes,
+
+`\begin{equation}
+\Delta Z_t = Z_t - Z_{t-1} = (1 - B)Z_t.
+\end{equation}`
+
+---
+class: middle
+##Operadores
+
+d.  Operador soma, denotado por `\(S\)` e definido por
+
+`\begin{align}
+S Z_t =&amp; \sum_{j=0}^{\infty} Z_{t-j} = Z_t + Z_{t-1} + \ldots \\
+      =&amp; Z_t + Z_{t-1} + Z_{t-2} + \ldots \\
+      =&amp; (1 + B + B^2 + \ldots) Z_t
+\end{align}`
+
+Utilizando propriedades de séries [infinitas](https://pt.wikipedia.org/wiki/S%C3%A9rie_geom%C3%A9trica), nota-se que 
+
+`\begin{equation}
+\sum_{n=0}^{\infty} B^n = \frac{1}{1 - B} = (1 - B)^{-1}
+\end{equation}`
+para `\(|B| &lt; 1\)`, e, dessa forma, temos:
+
+`\begin{equation}
+S Z_t = (1 - B)^{-1} Z_t = \Delta^{-1} Z_t.
+\end{equation}`
+
+Portanto, `\(S = \Delta^{-1}\)`. Maiores detalhes, favor consultar [aqui](https://www2.sorocaba.unesp.br/professor/luiza/CDI-III/series3.pdf) e/ou [aqui](https://tutorial.math.lamar.edu/classes/calcii/absoluteconvergence.aspx)
+
+---
+class: middle, inverse, center
+##Revisão de Polinômios e Números Complexos
+
+
+---
+class: middle
+##Definição de Polinômios
+
+- Essa parte da aula foi inspirada fortemente nas notas do prof. [Rogério](http://www.ufjf.br/rogerio_mattos/files/2009/06/Nota-sobre-Polin%C3%B4mios-2017.pdf) da Universidade Federal de Juiz de Fora.
+
+- Polinômios são expressões algébricas que podem incluir expoentes que são adicionados, subtraídos ou multiplicados. Matematicamente, podem ser expressos da seguinte forma:
+
+`$$P_m(x) = a_0 + a_1 x + a_2 x^2 + \ldots + a_m x^m,$$`    
+em que `\(m\)` é o grau do polinómio, `\(a_0, a_1, \ldots, a_m\)` são os coeficientes e `\(x\)` é uma variável real.
+
+---
+class: middle
+##Raízes de Polinômios
+
+- Equação polinomial: `\(P_m(x) = 0\)`.
+- `\(r\)` é uma raiz do polinômio `\(P_m(x)\)` se for um número real ou complexo que satisfaz a equação polinomial, isto é,
+`$$P_m(r) =  a_0 + a_1 r + a_2 r^2 + \ldots + a_m r^m = 0.$$`
+
+###Número de raízes
+
+- Um polinômio de grau `\(m \geq 1\)`, possui `\(m\)` raízes (reais e / ou complexas).
+- Um polinômio de grau `\(m \geq 1\)`, admite `\(m\)` raízes iguais (multiplicidade).
+
+---
+class: middle
+####Exemplos de Polinômios de grau 1 e 2
+
+&lt;img src="Aula_13_files/figure-html/Fig2.png" width="70%" align="center" /&gt;
+
+
+---
+class: middle
+##Números Complexos
+
+- Sejam `\(a\)` e `\(b\)` constantes reais;
+
+- Seja o número imaginário definido em `\(i = \sqrt{-1}\)`.
+
+- `\(z = a + b i\)` é um número complexo, `\(b i\)` é a parte imaginária.
+
+- Módulo de um número complexo `\(|z| = \sqrt{a^2 + b^2}\)`
+
+- **Círculo unitário**:  `\(\left\{z \in C: |z| = 1 \right\}.\)`
+
+- Plano complexo: um plano cartesiano em que as abcissas representam a parte real e ordenadas a parte imaginária. Cada número complexo corresponde a um par ordenado no plano.
+
+---
+class: middle
+##Círculo unitário no Plano Complexo
+
+&lt;img src="Aula_13_files/figure-html/Fig3.png" width="70%" align="center" /&gt;
+
+---
+class: middle
+##Fatoração de Polinômios
+
+- Sejam `\(r_1, r_2, \ldots, r_m\)` raízes do polinômio `\(P_m(x)\)`. Então
+
+`$$P_m(x) = a_m (x - r_1)(x - r_2) \ldots (x - r_m).$$`
+
+###Fatoração Parcial
+
+- Sejam `\(r_1, r_2, \ldots, r_m\)` raízes do polinômio `\(P_m(x)\)`. Então
+ele pode ser escrito como:
+
+`\begin{align}
+P_m(x) =&amp; (x - r_1) P_{m-1}(x) \\
+=&amp; (x - r_1)(x - r_2) P_{m-2}(x)
+\end{align}`
+e etc ...
+
+---
+class: middle
+##Raízes Unitárias
+
+- Se `\(k \leq m\)` das raízes de `\(P_m(x)\)` forem iguais a 1, diz-se que o polinômio possui `\(k\)` "raízes unitárias".
+
+- Neste caso, é possível fatorar da seguinte forma: `\(P_m(x) = (x - 1)^k P_{m - k}(x).\)`
+
+Ou ainda, 
+
+`\begin{align}
+P_m(x) =&amp; (1 - x)^k P_{m-k}(x) \phantom{111} \mbox{se k for par}\\
+P_m(x) =&amp; -(1 - x)^k P_{m-k}(x) \phantom{111} \mbox{se k for ímpar}.
+\end{align}`
+
+
+---
+class: middle, inverse, center
+##Processo Linear Geral
+
+
+---
+class: middle
+##Processo Linear Geral
+
+Uma série temporal `\(\left\{Z_t, t = 1 \ldots, N \right\}\)` é um processo linear geral se tem a seguinte representação
+
+`\begin{equation}
+Z_t = \mu + \sum_{j=0}^{\infty} \psi_j a_{t-j}
+\end{equation}`
+em que `\(a_t \sim RB(0, \sigma^2_a)\)` e `\(\left\{ \psi \right\}\)` é uma sequência de pesos tal que `\(\sum_{j=0}^{\infty} |\psi_j| &lt; \infty\)` e `\(\psi_0 = 1.\)` 
+
+Chamando `\(\tilde{Z}_t = Z_t - \mu\)` temos uma notação alternativa
+
+`\begin{equation}
+\tilde{Z}_t = \sum_{j=0}^{\infty} \psi_j a_{t-j} = (1 + \psi_1 B + \psi_2 B^2 + \ldots)a_t =  \psi(B)a_t.
+\end{equation}`
+em que `\(\psi(B)\)` é denominada função de transferência de filtro.
+
+---
+class: middle
+###Esperança matemática de `\(Z_t\)`
+
+- Admitindo que a série  `\(\sum_{j=0}^{\infty} \psi_j\)` seja convergente e que `\(a_t \sim RB(0,\sigma^2_a)\)`, o que consequentemente, `\(E[a_{t-j}] = 0,\phantom{!} \forall t = 1, \ldots N \phantom{1} \mbox{e} \phantom{1} j = 0, 1, \ldots;\)` temos:
+
+`\begin{align}
+E[Z_t] =&amp; \mu + E\left[ \sum_{j=0}^{\infty} \psi_j a_{t-j}\right] \\
+       =&amp; \mu + \sum_{j=0}^{\infty}\psi_j  E[a_{t-j}] \\
+       =&amp; \mu.
+\end{align}`
+
+
+- Será visto adiante que se `\(\sum_{j=1}^{\infty}\psi_j\)` for finita ou infinita convergente, `\(\left\{Z_t, t = 1 \ldots, N \right\}\)` é uma série estacionária.
+
+- Detalhes sobre esperança de soma infinita de variáveis aleatórias, favor [consultar](https://stats.stackexchange.com/questions/192772/convergence-criteria-for-linear-process-time-series-models). Interessantes materiais podem ser encontrados  [aqui](https://stats.stackexchange.com/users/8336/taylor) e [aqui](https://math.stackexchange.com/questions/575974/expected-value-of-infinite-sum).
+
+---
+class: middle
+###Função de autocovariância de `\(Z_t\)`
+
+- Admitindo ainda que a série  `\(\sum_{j=0}^{\infty} \psi_j\)` seja convergente e que `\(a_t \sim RB(0,\sigma^2_a)\)`, o que consequentemente,
+`\(E[a_{t-j}] = 0,\phantom{!} \forall t = 1, \ldots N \phantom{1} \mbox{e} \phantom{1} j = 0, 1, \ldots;\)` temos:
+
+`\begin{align}
+\gamma_k =&amp; E[(Z_t - \mu)(Z_{t+k} - \mu)] \\
+=&amp; E[\tilde{Z_t}\tilde{Z_{t+k}}] \\
+=&amp; E[\sum_{j=0}^{\infty} \psi_j a_{t-j} \sum_{i=0}^{\infty} \psi_j a_{t+k-i} ]
+\end{align}`
+
+Agora, para prosseguirmos note que 
+
+- `\(E[a_t, a_{t+k}] = 0\)`, para `\(k \neq  0.\)` 
+
+- Na expressão `\(E[\sum_{j=0}^{\infty} \psi_j a_{t-j} \sum_{i=0}^{\infty} \psi_j a_{t+k-i} ]\)`, temos um produto das somas `\(\sum_{j=0}^{\infty} \psi_j a_{t-j} \sum_{i=0}^{\infty} \psi_j a_{t+k-i}\)` dentro da esperança.
+
+
+---
+class: middle
+###Função de autocovariância de `\(Z_t\)`
+
+
+Usando a propriedade `\(\sum_{j=1}^m \sum_{i=1}^n x_j y_i = \left(\sum_{j=1}^{m}x_j\right) \left(\sum_{i=1}^{n}y_i\right)\)` temos `\(\gamma_k = E[\sum_{j=0}^{\infty}\sum_{i=0}^{\infty}\psi_j\psi_i a_{t-j} a_{t+k-i}]\)`, [ref](https://mathworld.wolfram.com/DoubleSeries.html).
+
+Agora note que 
+
+`\begin{align}
+E[\psi_j a_{t-j},\psi_i a_{t-(i-k)} ] = \psi_j \psi_i E[a_{t-j}a_{t-(i-k)}] = \left\{\begin{array}{cc} 
+\psi_j \psi_i \sigma_a^2.   &amp; j = i-k, \\
+0, &amp; \mbox{caso contrário}.   
+\end{array}\right.
+\end{align}`
+
+Portanto,
+
+`\begin{align}
+\gamma_k  =&amp; E[\sum_{j=0}^{\infty} \sum_{i=0}^{\infty}\psi_j\psi_i a_{t-j} a_{t-(i-k)} ] \\
+=&amp; \sum_{j=0}^{\infty} \sum_{i=0}^{\infty}\psi_j\psi_i E[ a_{t-j} a_{t-(i-k)}]. 
+\end{align}`
+
+No entanto, para `\(j = i-k \Rightarrow i = j + k\)`, logo
+
+`\begin{align}
+\gamma_k = \sum_{i=0}^{\infty} \psi_i\psi_{i+k} \sigma^2_a. 
+\end{align}`
+
+
+---
+class: middle
+###Função de autocovariância de `\(Z_t\)`
+
+Para `\(k=0\)`, temos  variância de `\(Z_t\)`, ou seja,
+
+`\begin{equation}
+\gamma_0 = Var(Z_t) = \sigma^2_a \sum_{j=0}^{\infty} \psi_j^2
+\end{equation}`
+
+
+- A condição para que a função de autocovariância e variância exista é que  `\(\sum_{j=0}^{\infty} \psi_j &lt; \infty\)`. Assim, temos que a média e a variância de `\(Z_t\)` são constantes e a covariância depende de `\(k\)`, logo `\(Z_t\)` **é um processo linear estacionário**.  
+
+Consequentemente, a função de autocorrelação é dada por:
+
+`\begin{equation}
+\rho_k = \frac{\sum_{i=0}^{\infty} \psi_i\psi_{i+k}}{\sum_{j=0}^{\infty} \psi_j^2}.
+\end{equation}`
+
+
+
+
+---
+###Modelos de Filtro Linear - Forma alternativa
+
+- Podemos escrever `\(\tilde{Z}_t\)` em uma forma alternativa, como uma soma ponderada de valores passados `\(\tilde{Z}_{t-1}, \tilde{Z}_{t-2}, \ldots\)` mais um ruído `\(a_t\)`, ou seja,
+
+`\begin{align}
+\tilde{Z}_t  =&amp; \pi_1 \tilde{Z}_{t-1} + \pi_2 \tilde{Z}_{t-2} + \ldots + a_t \\
+\tilde{Z}_t  =&amp; \pi_1 B \tilde{Z}_t  + \pi_2 B^2 \tilde{Z}_t + \ldots + a_t \\
+\tilde{Z}_t  =&amp; \sum_{j=1}^{\infty} \pi_j B^j \tilde{Z}_t + a_t \\
+\left(\tilde{Z}_t - \sum_{j=1}^{\infty} \pi_j B^j \tilde{Z}_t\right) =&amp;  a_t \\
+\left(1 - \sum_{j=1}^{\infty} \pi_j B^j \right) \tilde{Z}_t =&amp;  a_t \\
+\pi(B)\tilde{Z}_t =&amp;  a_t
+\end{align}`
+
+---
+class: middle
+###Resumo 
+
+Nós temos: 
+
+`\begin{equation}
+\tilde{Z}_t = \psi(B) a_t,
+\end{equation}`
+
+`\begin{equation}
+\pi(B)\tilde{Z}_t = a_t,
+\end{equation}`
+
+Assim, 
+
+`\begin{equation}
+\pi(B)\psi(B)a_t = a_t,
+\end{equation}`
+
+Portanto,
+
+`\begin{equation}
+\pi(B) = \psi(B)^{-1}
+\end{equation}`
+
+Essa relação pode ser usada para obter os pesos `\(\pi_j\)` em função dos pesos `\(\psi_j\)` e vice-versa.
+
+
+---
+class: middle, inverse, center
+##Condições de  estacionariedade de invertibilidade
+
+---
+##Exemplo 1 -  Morettin e Toloi (2004)
+
+- Considere um processo linear geral, em que `\(\psi_j = \phi^j, \phantom{111} j = 1, 2, 3, \ldots, \phantom{11} \psi_0 = 1\)` e `\(|\phi| &lt; 1\)`. Temos que: 
+
+`$$\sum_{j=0}^{\infty} \psi_j = \sum_{j=0}^{\infty} \phi^j = \frac{1}{1 - \phi}.$$`
+
+- Logo, temos que o valor esperado é dado por `\(E[Z_t] = \mu,\)` 
+
+- Para calcular a variância, fazemos:
+
+`$$\gamma_0 = \sigma^2_a \sum_{j=0}^{\infty} \phi^{2j} = \frac{\sigma^2_a}{1 - \phi^2}.$$`
+
+- Finalmente, a função de autocovariância é calculada da seguinte maneira:
+
+- Considerando `\(\psi_i = \phi^i\)` e `\(\psi_{i+k} = \phi^{i+k},\)` temos: 
+
+`$$\gamma_k = \sigma^2_a \sum_{i=0}^{\infty}\phi^i\phi^{i+k} = 
+\sigma^2_a \sum_{i=0}^{\infty}\phi^{2i+k} =\sigma^2_a \phi^k \sum_{i=0}^{\infty}\phi^{2i} = \sigma^2_a \frac{\phi^k}{1-\phi^2}.$$`
+
+---
+class: middle
+##Exemplo 1 -  Morettin e Toloi (2004)
+
+Agora suponha que `\(\phi=1\)` e `\(\mu=0\)`; então:
+
+`$$Z_t = a_t + a_{t-1} + \ldots$$`
+
+e `\(\sum_{j=0}^{\infty}|\psi|\)` não converge; logo, o processo não é estacionário. Esse processo é um exemplo de passeio aleatório.
+
+- Dizemos que `\(Z_t\)` é um passeio aleatório; seu valor no instante `\(t\)` é uma "soma" de choques aleatórios que "entraram" no sistema desde o passsado remoto até o instante `\(t\)`; por outro lado, a primeira diferença é um ruído branco.
+
+`$$Z_t = Z_{t-1} + a_t \Rightarrow Z_t - Z_{t-1} = a_t \Rightarrow \Delta Z_t = a_t.$$`
+
+
+
+---
+##Exemplo 2 -  Morettin e Toloi (2004)
+
+- Considere agora,
+
+`$$\tilde{Z}_t = a_t - \theta a_{t-1},$$`
+ou seja, `\(\psi_0 = 1,\)`  `\(\psi_1 = -\theta,\)` `\(\psi_j = 0,\)` `\(j &gt; 1.\)` 
+
+- Como `\(\sum \psi_j = 1 - \theta,\)` vemos que `\(\tilde{Z}_t = a_t - \theta a_{t-1}\)` define um processo estacionário para qualquer valor de `\(\theta.\)`
+
+- Vejamos como deve ser `\(\theta\)` para que possamos escrever `\(\tilde{Z}_t\)` em termos de valores passados `\(\tilde{Z}_{t-1}, \tilde{Z}_{t-2},\)` etc.
+
+`$$\tilde{Z}_t  = (1 - \theta B) a_t \Rightarrow  (1 - \theta B)^{-1} \tilde{Z}_t = (1 + \theta B + \theta^2 B^2 + \ldots) \tilde{Z}_t.$$`
+Comparando com `\(\pi(B)\tilde{Z}_t = a_t\)`, tem-se
+
+`$$\pi(B) = 1 + \theta B + \theta^2 B^2 + \ldots = \sum_{j=0}^{\infty} \theta^j B^j \phantom{e} \mbox{e} \phantom{1} \pi_j = -\theta^j, \phantom{1} j \geq 1.$$`
+- Pois, `\(\pi(B) = 1 - \sum_{j=1}^{\infty}\pi_jB^j.\)`
+
+---
+class: middle
+##Exemplo 2 -  Morettin e Toloi (2004)
+
+- A sequência formada pelos pesos `\(\pi_j\)` será convergente se `\(|\theta| &lt; 1\)` e neste caso dizemos que o processo é **invertível**.
+
+- Segue-se que para o processo ser invertível o operador `\(\pi(B)\)` deve convergir para `\(|B| \leq 1.\)` e
+
+`$$\tilde{Z}_t = -\theta \tilde{Z}_{t-1} + \theta^2 \tilde{Z}_{t-2} + \ldots + a_t.$$`
+
+####Proposição 
+
+- Um processo linear será estacionário se a série `\(\psi(B)\)` convergir para `\(|B| \leq 1;\)` será invertível se `\(\pi(B)\)` convergir para `\(|B| \leq 1.\)`
+
+Definição de proposição pode ser visto [no endereço](https://www.infoescola.com/matematica/logica-proposicional/).
+
+
+---
+class: middle
+
+##Invertibilidade - Intuição
+
+A expressão `\(\tilde{Z}_t = -\theta \tilde{Z}_{t-1} + \theta^2 \tilde{Z}_{t-2} + \ldots + a_t,\)` pode ser reescrita da seguinte maneira:
+
+`$$a_t = \sum_{j=0}^{\infty}\theta^j \tilde{Z}_{t-j} .$$`
+
+- Para processos invertíveis, `\(|\theta| &lt; 1,\)` observações mais recentes tem maiores pesos;
+
+- Para processos com `\(\theta = 1\)`, os pesos são constantes e observações distantes tem o mesmo peso das observações recentes.
+
+- Para processos com `\(|\theta| &gt; 1\)`, os pesos aumentam a medida que a defasagem "lags" aumentam.
+
+**Intuitivamente**, faz mais sentido `\(|\theta| &lt; 1\)`, ou seja, quando os processos são invertíveis [Rob Hyndman](https://stats.stackexchange.com/questions/50682/what-is-the-intuition-of-invertible-process-in-time-series).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
