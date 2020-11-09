@@ -15,7 +15,7 @@ class: center, middle, inverse, title-slide
 ## Exercícios adaptados do capítulo 5 - livro de Morettin e Toloi (2004)
 ### Renato Rodrigues Silva
 ### Universidade Federal de Goiás.
-### (updated: 2020-11-03)
+### (updated: 2020-11-09)
 
 ---
 
@@ -36,10 +36,183 @@ e.  `$$(1 - 0.64B^2)Z_t = (1 - 0.7 B - 0.6 B^2) a_t$$`
 
 ---
 class: middle
+
+##Solução
+
+##Condições de Estaconariedade
+
+- Processo de médias móveis são estacionários sempre
+
+- Para processos auto-regressivos: as raizes de `\(\phi(B) = 0\)` deve cair fora do círculo unitário. Ou seja,
+
+- `\(AR(1):  -1 &lt; \phi &lt; 1;\)`
+
+- `\(AR(2): -1 &lt; \phi_1 + \phi_2 &lt; 1; \phantom{11} -1 &lt; \phi_2 - \phi_1 &lt; 1; \phantom{11} -1 &lt; \phi_2 &lt; 1.\)`
+
+
+
+---
+class: middle
+
+##Solução
+
+##Condições de Invertibilidade
+
+- Processo auto-regressivos são sempre invertíveis:
+
+- Para processos de médias móveis: as raizes de `\(\theta(B) = 0\)` deve cair fora do círculo unitário. Ou seja,
+
+- `\(MA(1):  -1 &lt; \theta &lt; 1;\)`
+
+- `\(MA(2): -1 &lt; \theta_1 + \theta_2 &lt; 1; \phantom{11} -1 &lt; \theta_2 - \theta_1 &lt; 1; \phantom{11} -1 &lt; \theta_2 &lt; 1.\)`
+
+
+---
+class: middle
+
+##Solução
+
+`\begin{align}
+(1 - 1.5B + 0.5B^2) (1 - B)Z_t =&amp; (1-0.3)a_t \\
+\phi(B)(1-B)Z_t =&amp; \theta(B) a_t \\
+\phi(B)\Delta Z_t =&amp; \theta(B) a_t \\
+\phi(B) W_t  =&amp; \theta(B) a_t .
+\end{align}`
+em que `\(\phi(B) = (1 - 1.5B + 0.5B^2)\)` e `\(\theta(B)=(1-0.3).\)` 
+
+- Modelo `\(ARIMA(2,1,1),\)` observe que `\(W_t\)` é não estacionário, pois `\(\phi_2 + \phi_1 =  1.5 -0.5  = 1\)`
+
+- Ou seja, o processo é não estacionário e invertível.
+
+- Sugere-se uma segunda diferença.
+
+`\begin{align}
+(1 - 0.5B)(1 - B)(1 - B)Z_t =&amp; (1-0.3)a_t \\
+(1 - 0.5B)(1-B)^2 Z_t =&amp; (1-0.3)a_t.
+\end{align}`
+
+---
+class: middle
+
+##Solução
+
+`\begin{align}
+(1 - 2B + B^2)Z_t =&amp; (1-1.1B)a_t \\
+\phi(B)Z_t =&amp; \theta(B) a_t .
+\end{align}`
+
+- Modelo `\(ARMA(2,1),\)` observe que `\(Z_t\)` é não estacionário e não invertível, pois `\(\phi_2 + \phi_1 = 2 -1  = 1.\)` e `\(\theta =  1.1 &gt; 1.\)`
+
+
+- Sugere-se  duas diferenças.
+
+`\begin{align}
+(1 - 2B + B^2)Z_t =&amp; (1-1.1B)a_t \\
+(1 - B)(1 - B)Z_t =&amp; (1-1.1B)a_t \\
+(1-B)^2 Z_t =&amp; (1-1.1B)a_t \\
+W_t =&amp; (1-1.1B)a_t.
+\end{align}`
+
+
+
+
+---
+class: middle
+
+##Solução
+
+`\begin{align}
+(1 + \frac{4}{3}B + \frac{4}{9} B^2)Z_t =&amp; (1-0.4B)^2a_t \\
+(1 + \frac{4}{3}B + \frac{4}{9} B^2)Z_t =&amp; (1-0.8B +0.16B^2)a_t \\
+\phi(B)Z_t =&amp; \theta(B) a_t .
+\end{align}`
+
+- Modelo `\(ARMA(2,2),\)` observe que `\(Z_t\)` é não estacionário e invertível, pois `\(\phi_2 + \phi_1 = -\frac{4}{3} -\frac{4}{9} &gt; 1,\)`  `\(\theta_1 + \theta_2 = 0.8-0.16=0.64,\)`
+`\(\theta_2 - \theta_1 = -0.16-0.8=-0.96\)` e `\(-1&lt; \theta_2 =0.16 &lt; 1.\)`
+
+
+---
+class: middle
+
+##Solução
+
+`\begin{align}
+(1 -0.25 B -0.375 B^2)Z_t =&amp; (1+1.1B)a_t \\
+\phi(B)Z_t =&amp; \theta(B) a_t .
+\end{align}`
+
+- Modelo `\(ARMA(2,1),\)` observe que `\(Z_t\)` é  estacionário e não invertível, pois `\(\phi_2 + \phi_1 = 0.25+0.375 = 0.625,\)` 
+`\(\phi_2 + \phi_1 = 0.25+0.375 = 0.625,\)` 
+`\(\phi_2 - \phi_1 = +0.375-0.250 = 0.125,\)` e
+`\(-1&lt; \phi_2=0.375 &lt; 1.\)` Além disso, 
+`\(\theta = - 1.1 &lt; -1.\)`
+
+
+---
+class: middle
+
+##Solução
+
+`\begin{align}
+(1 -0.64B^2)Z_t =&amp; (1-0.7B -0.6B^2)a_t \\
+\phi(B)Z_t =&amp; \theta(B) a_t .
+\end{align}`
+
+O processo é não invertível e estacionário, pois `\(\theta_1 + \theta_2 = 0.7+0.6&gt;1.\)`
+
+
+---
+class: middle
 ####Exercícios
 
 
 2.  Escreva o modelo ARIMA(1,1,1) na forma de choques aleatórios
+
+####Solução
+
+- `\(ARIMA(1,1,1):\)`
+
+`\begin{align}
+(1 - \phi B)(1 - B)Z_t =&amp; (1 - \theta B) a_t \\
+(1 - \phi B + \phi B^2) Z_t =&amp; (1 - \theta B) a_t \\
+(1 - (1 + \phi) B + \phi B^2) Z_t =&amp; (1 - \theta B) a_t \\
+\varphi(B) Z_t =&amp; \theta (B) a_t. 
+\end{align}`
+
+
+####Forma de choques aleatórios
+
+`\begin{align}
+Z_t =&amp; \psi(B) a_t \Rightarrow \\
+\varphi(B) Z_t =&amp; \varphi(B)\psi(B) a_t \Rightarrow \\
+\varphi(B)\psi(B) =&amp; \theta(B). 
+\end{align}`
+
+---
+class: middle
+####Solução
+
+Sendo assim,
+
+`\begin{align}
+ (1 - (1 + \phi) B + \phi B^2)(1 + \psi_1 B + \psi_2 B^2 + \ldots ) = 1 - \theta B .
+\end{align}`
+
+`\begin{align}
+&amp;&amp; 1 - (1 + \phi) B + \phi B^2 + \psi_1 B - \psi_1(1 + \phi)B^2 + \phi \psi_1 B^3 +\\
+&amp;&amp;  \psi_2 B^2 - \psi_2 (1 + \phi) B^3 + \phi \psi_2 B^4 + \ldots = 1 - \theta B.
+\end{align}`
+
+Logo,
+
+`$$-1 -\phi + \psi_1 = - \theta \Rightarrow \psi_1 = 1 + \phi -\theta.$$`
+
+`$$\psi_2 - \psi_1(1+\phi)+\phi \Rightarrow \psi_2 = (1+\phi-\theta)(1+\phi)-\phi$$` 
+
+`$$\psi_3 = \psi_2(1+\phi) -\phi\psi_1.$$`
+
+
+`$$\psi_j = \psi_{j-1}(1+\phi) -\phi\psi_{j-2}.$$`
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
