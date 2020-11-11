@@ -1,0 +1,619 @@
+---
+title: "Aula 17 - Metodologia Box-Jenkins (parte 1)"
+subtitle: "Material fortemente baseado no livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Abordagem de Box e Jenkins (1970).
+
+- Tal metodologia consiste em ajustar modelos auto-regressivos integrados de médias móveis a um conjunto de dados baseado em um ciclo iterativo.
+
+##Resumo:
+
+a.  Uma classe geral de modelos é considerada para a análise (especificação);
+
+b.  Há identificação de um modelo, com base na análise de autocorrelações, autocorrelações parciais e outros critérios;
+
+c. A seguir vem a fase de estimação, na qual os parâmetros do modelo identificado são estimados;
+
+d. Finalmente, há a verificação ou diagnóstico do modelo ajustado, através de uma análise de resíduos, para se saber se este é adequado para os fins em vista (previsão, por exemplo).
+
+
+- Caso o modelo não seja adequado, o ciclo é repetido, voltando-se à fase de identificação.
+
+
+---
+class: inverse, center, middle
+##Função de autocorrelação parcial
+
+
+---
+class: middle
+##Função de autocorrelação parcial
+
+- Na aula passada foi visto:
+
+a. Um processo $AR(p)$ tem uma função de autocovariância que decai de acordo com exponenciais e ou senoides amortecidas, infinita em extensão;
+
+b. Um processo $MA(q)$ tem fac finita, no sentido que ela apresenta um corte após o "lag" $q$;
+
+c. Um processo $ARMA(p,q)$ tem fac infinita em extensão, a qual decai de acordo com exponenciais e ou senoides amortecidas após o "lag" $q-p$.
+
+- Essas observações serão úteis no procedimento de identificação. Com o intuito de complementar a etapa de identificação, Box, Jenkins e Reinsel (1994) propuseram a utilização da **função de autocorrelação parcial**.
+
+
+---
+class: middle
+##Correlação Parcial: Revisão
+
+- Em geral, uma correlação parcial é uma correlação condicional. 
+
+- É a correlação entre duas variáveis sob a suposição de que conhecemos e levamos em conta os valores de algum outro conjunto de variáveis. 
+
+- Por exemplo, considere um contexto de regressão em que $y$ é a variável de resposta e, $x_1$, $x_2$ e $x_3$ são variáveis preditoras. 
+
+- A correlação parcial entre $y$ e $x_3$ é a correlação entre as variáveis determinadas levando em consideração o quanto $y$ e $x_3$ estão relacionados a $x_1$ e $x_2$ . Para calcular essa correlação obtemos:
+
+a.  O resíduo do modelo de regressão `lm(y ~ x1+ x2)`;
+
+b.  O resíduo do modelo de regressão  `lm(x3 ~ x1+ x2)`;
+
+c. A correlação de Pearson entre esses resíduos.
+
+
+---
+class: middle 
+
+##Obtenção da função de autocorrelação parcial 
+
+A função definida pela seguinte correlação condicional
+\begin{equation}
+P_k = \phi_{kk} = Corr(Z_t, Z_{t+k}| Z_{t+1}, \ldots, Z_{t+k-1})
+\end{equation}
+é usualmente referida como correlação parcial em análise de séries temporais.
+
+- Vamos denotar por $\phi_{kj}$ o j-ésimo coeficiente de um modelo $AR(k)$, de tal modo que $\phi_{kk}$ seja o último coeficiente. Sabemos que
+
+$$\rho_j = \phi_{k1} \rho_{j-1} + \rho_{k2} \rho_{j-2} + \ldots + \phi_{kk} \rho_{j-k}, \phantom{111} j = 1, \ldots, k,$$
+
+a partir das quais obtemos as equações de Yule- Walker 
+
+
+\begin{align}
+\rho_1 =& \phi_{k1} \rho_0 + \phi_{k2} \rho_1 + \ldots + \phi_{kk} \rho_{k-1} \\
+\rho_2 =& \phi_{k1} \rho_1 + \phi_{k2} \rho_0 + \ldots + \phi_{kk} \rho_{k-2} \\
+\vdots \\
+\rho_k =& \phi_{k1} \rho_{k-1} + \phi_{k2} \rho_{k-2} + \ldots + \phi_{kk} \rho_{0}
+\end{align}
+
+
+---
+##Solução Geral da Equação de Yule-Walker 
+
+Para $k=1$ temos $\rho_1 = \phi_{11} \rho_0$, logo $\phi_{11} = \rho_1.$ Para $k=2$, temos:
+
+\begin{align}
+\rho_1 =& \phi_{k1} 1 + \phi_{k2} \rho_{1} \\
+\rho_2 =& \phi_{k1} \rho_1 + \phi_{k2} 1 
+\end{align}
+- Observe que $\rho_0 = 1$ e $\rho_{-j} = \rho_{j}.$ Logo, 
+
+\begin{eqnarray}
+\phi_{22} = \frac{
+\left|
+\begin{array}{cc}
+1       &  \rho_1 \\
+\rho_1  &  \rho_2 
+\end{array} \right|}
+{
+\left|
+\begin{array}{cc}
+1       &  \rho_1 \\
+\rho_1  &  1 
+\end{array} \right|
+} = \frac{\rho_2-\rho_1^2}{1-\rho_1^2}.
+\end{eqnarray}
+
+Assim, em geral, temos:
+
+$$\phi_{kk} = \frac{|\mathbf{P}^{*}_k|}{|\mathbf{P}_k|},$$
+em que $|\mathbf{P}_k|$ é a matriz de autocorrelações  e $|\mathbf{P}^{*}_k|$ é a matriz de autocorrelações com 
+a última coluna substituídas pelo vetor de autocorrelações.
+
+---
+##Solução Geral da Equação de Yule-Walker 
+
+- Será necessário estimar a facp de um processo AR, MA ou ARMA.
+
+- Uma maneira consiste em estimar, sucessivamente, modelos auto-regressivos de ordens $p = 1, 2, 3, \ldots$, por mínimos quadrados e tomar as estimativas do último coeficiente de cada ordem.
+
+- Outra maneira consiste em substituir nas equações de Yule=Walker as fac $\rho_j$ por suas estimativas
+
+$$\rho_j = \hat{\phi}_{k1} r_{j-1} + \ldots + \hat{\phi}_{kk} r_{j-k}, \phantom{111} j = 1, \ldots, k,$$
+e resolver estas equações para $k = 1, 2, \ldots$
+
+- Pode-se demonstrar que $\phi_{kk}$ é igual à correlação parcial entre as variáveis $Z_t$ e $Z_{t-k}$ ajustadas às variáveis intermediárias $Z_{t-1}, \ldots, Z_{t-k+1}$.
+
+- Ou seja, $\phi_{kk}$ mede a correlação remanescente entre $Z_t$ e $Z_{t-k}$ depois de eliminada a influência de $Z_{t-1}, \ldots, Z_{t-k+1}.$
+
+---
+##Estimativa Função de Autocorrelação
+
+- Lembremos que a fac $\rho_j$ é estimada por
+
+$$r_j = \frac{c_j}{c_0}, \phantom{11} j = 0,1, \ldots, N-1.$$
+em que $c_j$ é a estimativa da facv $\gamma_j,$
+
+$$c_j = \frac{1}{N}\sum_{t=1}^{N-j} \left[(Z_t - \bar{Z})(Z_{t+j} - \bar{Z}) \right], \phantom{111} j = 0, 1, \ldots, N - 1.$$
+sendo $\bar{Z} = \frac{1}{N}\sum_{i=1}^N Z_t$ a média amostral. Lembremos que $r_j = r_{-j}.$
+
+- A variância de $r_j$, para um processo estacionário normal, é dada por:
+
+$$Var(r_j) \approx \frac{1}{N} \sum_{\nu = -\infty}^{\infty}[\rho_{\nu} +
+\rho_{\nu+j}\rho_{\nu-j} - 4\rho_{j}\rho_{\nu-j} +  2\rho_{j}^2\rho_{j}^2],$$
+
+- Para um processo em que as autocorrelações são nulas para $\nu > q$, tem-se:
+
+$$Var(r_j) \approx \frac{1}{N}\left[1 + 2\sum_{\nu=1}^q \rho_{\nu}^2 \right] \Rightarrow \hat{\sigma}^2 \approx \frac{1}{N}\left[1 + 2\sum_{\nu=1}^q r_{\nu}^2 \right], \phantom{11} j > q.$$ 
+
+
+---
+##Intervalo de confiança aproximado para as autocorrelações
+
+- Para $N$ suficientemente grande e sob a hipótese que $\rho_j = 0,$ para $j > q,$ a distribuição de $r_j$ é aproximadamente normal, com média igual a zero e variância dada por $Var(r_j) \approx \frac{1}{N}\left[1 + 2\sum_{\nu=1}^q \rho_{\nu}^2 \right].$
+
+- O intervalo é dado por
+
+$$r_j \pm t_{\gamma} \hat{\sigma}(r_j).$$
+em que $t_{\gamma}$ é o valor da estatística $t$ de Student com $N - 1$ graus de liberdade.
+
+
+---
+class: inverse, center, middle
+##Procedimento de identificação
+
+
+---
+class: middle
+##Procedimento de identificação
+
+- O objetivo da identificação é determinar os valores $p$, $d$ e $q$ do modelo $ARIMA(p,d,q)$.
+
+- O procedimento de identificação consiste de três partes:
+
+a.  Verficar se existe necessidade de uma transformação na série original, com o objetivo de estabilizar sua variância.
+
+b. Tomar diferenças da série tantas vezes quantas necessárias para se obter uma série estacionária, de modo que o processo $\Delta^d Z_t$ seja reduzido a um $ARMA(p.q).$
+
+c.  Identificar o processo $ARMA(p,q)$ resultante, através da análise das autocorrelações e autocorrelações parciais estimadas, cujos os comportamentos devem imitar os comportamentos das respectivas quantidades teóricas.
+
+
+```{r, echo = FALSE, warning = FALSE, message=FALSE}
+library(kableExtra)
+tab1 = data.frame()
+```
+
+
+---
+class: middle
+###Comportamento das fac e facp de um processo ARIMA(p,d,q)
+
+
+| $(1,d,0)$                 |  $(0,d,1)$             |
+| --------------------------| -----------------------|
+| $\rho_{k}$ decai exponencialmente      | somente $\rho_1 \neq 0$|    
+| somente $\phi_{11} \neq 0$| decaimento exponencial dominante |
+| $(2,d,0)$                 |  $(0,d,2)$             |
+| $\rho_{k}$ mistura de exponenciais e senoides amortecidas  | somente $\rho_1 \neq 0$ e $\rho_1 \neq 0$|    
+| somente $\phi_{11} \neq 0$ e $\phi_{22} \neq 0$| dominanda por mistura de exponenciais ou senoides amortecidas|
+
+
+---
+class: middle
+###Comportamento das fac e facp de um processo ARIMA(p,d,q)
+
+| $(1,d,1)$                 
+| -------------------------------------------------|
+| $\rho_{k}$ decai exponencialmente após lag 1 
+| $\phi_{11}$ é dominada por decaimento exponencial após lag 1|
+
+#####Observação Importante !!!
+
+- Dada a forma complicada da fac e facp de um modelo ARMA, estas funções não são muito úteis para identificar tais modelos.
+
+- O que se recomenda, neste caso, é ajustar alguns modelos de baixa ordem, por exemplo, (1,1), (1,2), (2,1) e utilizar critérios que permitam escolher o modelo mais adequado.
+
+
+---
+class: middle
+###Comentários úteis sobre identificação de modelos McLeod (1983)
+
+- O maior problema neste estágio do procedimento é evitar um excesso de diferenças.
+
+- Um número excessivo de diferenças resulta em um valor negativo da autocorrelação de ordem 1 da série diferençada, neste caso $\rho_1 = -0.5.$
+
+- Quando a série é corretamente diferençada, a variância da série transformada diminui, por outro lado, excesso de diferenças aumentará essa variância.
+
+
+---
+class: inverse, center, middle
+##Formas alternativas de identificação
+
+
+---
+class: middle
+###Critério de Informação de Akaike (1974)
+
+- Akaike (1974) sugere escolher o modelo cujas ordens $k$ e $l$ minimizam o critério
+
+$$AIC(k,l) = \ln{\hat{\sigma}^2_{k,l}} + \frac{2(k+l)}{N},$$
+pois os valores de $k$ e $l$ que minimizam esta última expressão são os mesmos que minimizam.
+
+
+###Critério de Informação Bayesiano (1978)
+
+- Schwarz (1978) sugerem minimizar o critério de informação Bayesiano (1978), que no caso de um modelo ARMA é dado por:
+
+$$BIC(k,l) = \ln{\hat{\sigma}^2_{k,l}} + (k+l)\frac{\ln N}{N}.$$
+em que $\hat{\sigma}^2_{k,l}$ é a estimativa de máxima verossimilhança da variância residual do modelo ARMA(k,l).
+
+
+---
+class: inverse, center, middle
+##Transformações e Teste e Raízes Unitárias
+
+---
+##Teste de Raíz Unitárias baseando-se em um Modelo AR(1)
+
+
+- Por questões didáticas, vamos assumir $\mu = 0$ e ausência de tendência determinística.
+
+- Sendo assim, considere o seguinte modelo:
+
+$$Z_t = \phi Z_{t-1} + a_t.$$
+
+- Observe que se $\phi=1$, temos um passeio aleatório, ou seja, uma série não estacionária. Por outro lado,  se $\phi < 1,$ temos uma série estacionária. O estimador de mínimos quadrados de $\phi$ é dado por:
+
+$$\hat{\phi} = \frac{\sum_{t=1}^N Z_{t-1}Z_t}{\sum_{t=1}^N Z_{t-1}^2}.$$
+
+- No entanto, por detalhes técnicos que eu não vou mostrar aqui, não é possível obter a distribuição de $\hat{\phi}$ quando a série é não estacionária. A distribuição t somente é válida para $\phi < 1$.
+
+
+---
+##Teste de Raíz Unitárias baseando-se em um Modelo AR(1)
+
+- Para resolver esse problema, procede-se da seguinte maneira.
+
+\begin{align}
+Z_t  =& \phi Z_{t-1} + a_t \\
+Z_t - Z_{t-1} =& \phi Z_{t-1} - Z_{t-1} + a_t \\
+\Delta Z_t =& (\phi - 1)  Z_{t-1}+ a_t \\
+\Delta Z_t =& \gamma Z_{t-1} + a_t.
+\end{align}
+
+- Nesse caso, a hipótese nula fica: $H_0: \gamma =0$ (série não estacionária) e $H_0: \gamma < 0$ (série estacionária). 
+
+- Ainda, com essa reparametrização é possível obter a distribuição assintótica da estatística do teste. 
+
+- Esse teste é chamado **Teste de Dickey-Fuller**.
+
+
+---
+class: middle
+##Teste de Dickey-Fuller 
+
+- Agora vamos considerar que o modelo possua uma constante "drift" e uma tendência determinística.
+
+O teste de Dickey-Fuller verifica se $\gamma = 0$ no seguinte modelo
+
+$$\Delta Z_t = \alpha + \beta t + \gamma Z_{t-1} + \epsilon_t,$$
+
+- Nesse caso, a hipótese nula é a mesma, ou seja, que a série seja não estacionária. Entretanto, agora a hipótese alternativa pode ser que a série seja estacionária ou não estacionária determinística.
+
+
+
+
+
+
+
+
+---
+class: middle
+##Teste de Dickey-Fuller Aumentado
+
+- O teste de Dickey-Fuller Aumentado permite incluir termos de processos autoregressivos de ordens maiores. Contudo, ainda testa-se se $\gamma = 0.$
+
+$$\Delta Z_t = \alpha + \beta t + \gamma Z_{t-1} + \delta_1 \Delta Z_{t-1} + \delta_2 \Delta Z_{t-2} + \ldots,$$
+- **Importante!!!**: As hipóteses nula para ambos testes é que os dados não são estacionários. 
+
+####Material Extra
+
+- Nesse livro [aqui](https://nwfsc-timeseries.github.io/atsa-labs/sec-boxjenkins-aug-dickey-fuller.html) podem ser encontrados algumas explicações sobre o assunto.
+
+- O portal [action](http://www.portalaction.com.br/series-temporais/141-teste-de-dickey-fuller-aumentado) também têm informações a respeito do tema.
+
+- Além disso, vale ressaltar que existem outros testes de raízes unitárias tais como:
+Teste de Phillips - Perron e KPSS.
+
+---
+class: middle
+##Transformações
+
+-  Há basicamente, duas razões para se transformar os dados originais: estabilizar a variância e/ou tornar o efeito sazonal aditivo.
+
+- Se os dados mostram variação que aumentam ou decresece com o nível da série, então uma transformação pode ser útil.
+
+- Uma outra razão para efetuar transformações é obter uma distribuição para os dados mais simétrica e próxima da normal.
+
+
+###Algumas altervativas de transformações
+
+- Transformações logaritmicas
+
+- Transformações Box-Cox
+
+- Maiores detalhes podem ser vistos [aqui](https://otexts.com/fpp2/transformations.html)
+
+
+---
+class: middle, center, inverse
+##Exemplo prático no R
+
+---
+
+####Carregando as bibliotecas
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(httr)
+library(xlsx)
+library(ggfortify)
+```
+
+####Lendo os dados
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$ICV) %>% autoplot()
+
+```
+
+
+####Plotando a série
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+ ts(dat$ICV) %>% autoplot()
+```
+
+
+---
+
+####Plotando a série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(httr)
+library(xlsx)
+library(ggfortify)
+library(forecast)
+
+url1 = 'https://www.ime.usp.br/~pam/ICV.xls'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1)) %>% slice(1:114)
+
+ts(dat$ICV) %>% autoplot()
+```
+
+- Os modelos ARIMA são capazes de descrever séries estacionárias e não estacionárias, mas que não apresentem comportamento explosivo.
+
+
+
+---
+####Plotando a série usando a transformação logarítmica
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+ ts(log(dat$ICV)) %>% autoplot()
+```
+
+
+####Plotando a série usando a transformação logarítmica com uma diferença
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+ ts(diff(log(dat$ICV))) %>% autoplot()
+```
+
+####Plotando a série usando a transformação logarítmica com duas diferenças
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+ ts(diff(log(dat$ICV), differences=2)) %>% autoplot()
+```
+
+
+---
+####Plotando a série usando a transformação logarítmica
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ ts(log(dat$ICV)) %>% autoplot()
+```
+
+
+---
+####Plotando a série usando a transformação logarítmica com uma diferença
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ ts(diff(log(dat$ICV))) %>% autoplot()
+```
+
+
+---
+####Plotando a série usando a transformação logarítmica com duas diferenças
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+ts(diff(log(dat$ICV), differences=2)) %>% autoplot()
+```
+
+---
+####Teste de Duckey Fuller Aumentado apenas com transformação
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(ts(log(dat$ICV)),k=0)
+```
+
+
+####Teste de Duckey Fuller Aumentado com transformação e 1 diferença
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(diff(ts(log(dat$ICV)),k=0)
+```
+
+####Teste de Duckey Fuller Aumentado com transformação e 2 diferenças
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(diff(ts(log(dat$ICV)), differences=2),k=0)
+```
+
+---
+####Teste de Duckey Fuller Aumentado apenas com transformação
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(ts(log(dat$ICV)),k=0)
+```
+
+
+####Teste de Duckey Fuller Aumentado com transformação e 1 diferença
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(diff(ts(log(dat$ICV))),k=0)
+
+```
+
+
+####Teste de Duckey Fuller Aumentado com transformação e 2 diferenças
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+tseries::adf.test(diff(ts(log(dat$ICV)), differences=2),k=0)
+```
+
+
+---
+class: middle
+
+####Função de Autocorrelação
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+acf(diff(ts(log(dat$ICV)), differences=1))
+```
+
+####Função de Autocorrelação Parcial
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+pacf(diff(ts(log(dat$ICV)), differences=1))
+```
+
+
+---
+####Função de Autocorrelação
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+acf(diff(ts(log(dat$ICV)), differences=1))
+```
+
+
+---
+####Função de Autocorrelação Parcial
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+pacf(diff(ts(log(dat$ICV)), differences=1))
+```
+
+
+
+---
+class: middle
+
+####Função de Autocorrelação
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+acf(diff(ts(log(dat$ICV)), differences=2))
+```
+
+####Função de Autocorrelação Parcial
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+pacf(diff(ts(log(dat$ICV)), differences=2))
+```
+
+---
+class: middle
+
+####Função de Autocorrelação
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+acf(diff(ts(log(dat$ICV)), differences=2))
+```
+
+---
+
+####Função de Autocorrelação Parcial
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+pacf(diff(ts(log(dat$ICV)), differences=2))
+```
+
+---
+class: middle
+##Modelo Escolhido pela metodologia Box e Jenkins
+
+- Observando os resultados dos testes de raízes unitárias tanto $d=1$ como $d=2$ proporciona séries estacionárias
+
+- Seguindo as recomendações feitas por McLeod (1983), observa-se que para $d=2$ (duas diferenças),  a estimativa de $\rho_1$ é próximo de $-0.5$ (-0.31), o que indica um excesso de diferença.
+
+- Portanto,  olhando as estimativas de autocorrelações e autocorrelações parciais com $(d=1)$, tem-se que o **modelo preliminar escolhido** é $ARIMA(1,1,0).$
+
+
+
+---
+##Usando o critério AIC
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+auto.arima(ts(dat$ICV), lambda="auto", allowdrift = TRUE)
+
+```
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+
+auto.arima(ts(log(dat$ICV)), lambda=NULL, allowdrift = TRUE)
+
+```
+
+
+---
+##Usando o critério AIC
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+auto.arima(ts(dat$ICV), lambda="auto", allowdrift = TRUE)
+
+```
+
+
+###Interessante discussão na web
+
+- Esse post escrito na rede social linkdln discute um pouco sobre escolha automática de [modelos](https://www.linkedin.com/pulse/note-autoarima-boxcox-transform-al-yazdani/)
+
