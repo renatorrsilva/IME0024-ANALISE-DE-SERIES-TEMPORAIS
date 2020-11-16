@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 14 - Metodologia Box-Jenkins (parte 2)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 14 - Metodologia Box-Jenkins (parte 2)
+## Estimação e Diagnóstico do Modelo
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-08-07)
+
+---
+
+class: middle, inverse, center
+##Estimação dos Parâmetros
+
+
+---
+class: middle
+##Estimação dos Parâmetros - Introdução
+
+- Uma vez que o modelo foi identificado, o próximo passo para a série temporal é estimar seus parâmetros.
+
+- Existem alguns métodos para isso: métodos dos momentos, mínimos quadrados e método da máxima verossimilhança.
+
+- Nesta aula, apresentaremos alguns aspectos do método da máxima verossimilhança no contexto de séries temporais. Mais precisamente, apresentaremos o método da máxima verossimilhança condicional.
+
+- Depois discutiremos brevemente quais métodos estão implementados no software R.
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Considere um modelo `\(ARMA(p,q)\)`
+
+`$$\tilde{Z}_t = \phi_1 \tilde{Z}_{t-1} + \ldots + \phi_p \tilde{Z}_{t-p} + \ldots + a_t - \theta_1 a_{t-1} - \ldots - \theta_q a_{t-q},$$`
+
+- A distribuição conjunta de `\(a_1, \ldots, a_n\)` é dada por:
+
+`$$f(a_1, \ldots, a_n) = \frac{1}{(2 \pi \sigma_a^2)^{\frac{n}{2}}} \exp\left\{-\frac{1}{2}\sum_{t=1}^n a_{t}^2 \right\}.$$`
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Reescrevendo `\(a_i\)` como:
+
+`$$a_t = \tilde{Z}_t - \phi_1 \tilde{Z}_{t-1} - \ldots - \phi_p \tilde{Z}_{t-p} + \theta_1 a_{t-1} + \ldots + \theta_q a_{t-q},$$`
+temos 
+
+`$$l(\phi, \mu, \theta, \sigma_a^2) = -\frac{n}{2} \log{(2\pi\sigma_a^2)} - \frac{S(\phi, \mu, \theta)}{2 \sigma^2_a}.$$`
+em que `\(l(\phi, \mu, \theta, \sigma_a^2)\)` é o logaritmo da verossimilhança e
+
+`$$S(\phi, \mu, \theta) = \sum_{t=1}^n (\tilde{Z}_t - \phi_1 \tilde{Z}_{t-1} - \ldots \phi_p \tilde{Z}_{t-p} + \theta_1 a_{t-1} + \ldots + \theta_q a_{t-q} )^2.$$`   
+
+- As quantidades `\(\hat{\phi}, \hat{\mu}\)` e `\(\hat{\theta}\)` são chamadas estimadores de máxima verossimilhança.
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Existem algumas alternativas para especificar as condições iniciais para `\(Z_t\)` e `\(a_t\)`.
+
+- Baseando-se nas pressuposições de que a série seja estacionária e que a distribuição do ruído branco seja Gaussiana, 
+
+- Pode-se substituir `\(Z_t\)` desconhecido por `\(\bar{Z}\)` e `\(a_t\)` por `\(E[a_t] = 0\)`.
+
+- Após estimar os parâmetros `\(\phi, \mu, \theta\)` pode-se estimar o parâmetro `\(\sigma_a^2\)`,
+
+`$$\hat{\sigma_a^2} = \frac{S(\hat{\phi}, \hat{\mu}, \hat{\theta})}{(n-p)-(p+q+1)}.$$`
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+
+```r
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+```
+
+
+```r
+##Simulando um modelo ARIMA(1,0,1)
+set.seed(30)
+ts.sim &lt;- arima.sim(list(order = c(1,0,1), ar = 0.8, ma=0.8), n = 50)
+##Plotando a série
+ts.sim %&gt;% autoplot()
+```
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+
+
+![](Aula_14_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+
+---
+####Método da Máxima Verossimilhança Condicional - Código no R
+
+
+```r
+##Estimando os parâmetros
+armacoeff &lt;- function(x) {
+  l = length(x)
+  param=c(mu=0, phi=0, theta=0)
+  SSE &lt;- function(param){
+    mu=param[1]
+    phi=param[2]
+    theta=param[3]
+    res = vector()
+    res[1] = 0
+    for(i in (2:l)){
+      res[i] = (x[i]-mu) - phi*(x[i-1]-mu) - theta*res[i-1]
+    }
+    return(sum(res*res))
+  }
+  bla = nlminb(objective=SSE, start= param)
+  return(bla)
+}
+armacoeff(as.vector(ts.sim))
+```
+
+**Código feito pelo Professor [Rob Hyndman](https://stats.stackexchange.com/questions/248276/maximum-likelihood-estimation-for-arma1-1-in-r)**.
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+
+
+
+
+
+```r
+armacoeff(as.vector(ts.sim))$par
+```
+
+```
+##        mu       phi     theta 
+## 0.5678909 0.8080108 0.8235283
+```
+
+
+```r
+arima(ts.sim, order=c(1,0,1), method="CSS")
+```
+
+```
+## 
+## Call:
+## arima(x = ts.sim, order = c(1, 0, 1), method = "CSS")
+## 
+## Coefficients:
+##          ar1     ma1  intercept
+##       0.8080  0.8235     0.5679
+## s.e.  0.0807  0.0843     1.4751
+## 
+## sigma^2 estimated as 1.229:  part log likelihood = -76.09
+```
+
+- O modelo usado para simulação é diferente do apresentado em aula,
+veja [aqui](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/arima)
+
+---
+#Implementação do método no R
+
+- Na literatura padrão de séries temporais, há um detalhamento muito maior do método da máxima verossimilhança com relação ao que foi apresentado aqui.
+
+- Entretanto, nenhum desses métodos apresentados nesses livros ou cursos tradicionais estão implementados no software R.
+
+- No software R, para estimação de parâmetros de modelos ARIMA(p,d,q) foi implementado o algoritmo AS 154, Gardner (1980).
+
+- As justificativas pela escolha desse algoritmo pode ser visto nesse [paper](https://www.r-project.org/doc/Rnews/Rnews_2002-2.pdf)
+
+- Detalhes da função arima podem ser vistos [aqui](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/arima).
+
+
+
+---
+class: middle, center, inverse
+##Diagnóstico do modelo
+
+
+---
+class: middle
+##Diagnóstico do modelo - Introdução (Portal Action e Morettin e Toloi 2004)
+
+- Após identificar e estimar o modelo é necessário verificar se ele representa, ou não, adequadamente os dados. 
+
+- A verificação do modelo pode ser feita analisando os resíduos. Suponha que o modelo ajustado seja da seguinte forma
+
+- Se o modelo estiver correto os resíduos exatos `\(a_t\)` devem ser i.i.d com distrubuição `\(N(0,1)\)`.
+
+- Um método de verificar esta hipótese é verificar se os resíduos estimados do modelo são não correlacionados.
+
+---
+class: middle
+##Teste de Box-Pierce
+
+A hipótese nula do teste é que os resíduos são i.i.d e a hipótese alternativa é que os resíduos não são i.i.d. Calculamos uma estimativa de auto correlações por meio de:
+
+`$$\hat{r}_k = \dfrac{\sum^n_{t = k+1} \hat{a}_t \hat{a}_{t-k}}{\sum^n_{t=1} \hat{a}^2_t}$$`	
+é possível mostrar que `\(\hat{r}_k \sim N(0, \frac{1}{n})\)`. 
+
+Sob `\(H_0\)`, a estatística `\(Q(k) = n \sum^K_{j=1} \hat{r}^2_j\)`,
+terá aproximadamente uma distribuição `\(\chi^2\)` com K graus de liberdade, onde K é o número de defasagens tomada na função de autocorrelação. 
+
+
+Portanto, rejeitamos a hipótese nula se `\(Q &gt; \chi^2_{1 - \alpha, k}\)` com um nível de significância `\(\alpha\)` [portal action](http://www.portalaction.com.br/series-temporais/471-teste-de-box-pierce).
+
+---
+class: middle
+##Teste de Ljung Box
+
+As hipóteses do teste são as mesmas do teste anterior. Calculamos as estimativas de autocorrelações por:
+
+`$$\hat{r}_k = \dfrac{\sum^n_{t = k+1} \hat{a}_t \hat{a}_{t-k}}{\sum^n_{t=1} \hat{a}^2_t}.$$`	
+É possível mostrar que `\(\hat{r}_k \sim N(0, \frac{1}{n}).\)` 
+
+
+Se o modelo for apropriado, a estatística do teste
+`$$Q(k) = n(n-2) \sum^K_{j=1} \frac{\hat{r}^2_j}{(n-j)}$$`	
+terá aproximadamente uma distribuição `\(\chi^2\)` com (K - p - q) graus de liberdade, onde K é o número de defasagens tomada na função de autocorrelação, p e q são as ordens do modelo ajustado. Portanto, rejeitamos a hipótese nula se `\(Q &gt;\chi^2_{1 - \alpha, k-p-q}\)` com um nível de significância `\(\alpha\)` [wiki](https://en.wikipedia.org/wiki/Ljung%E2%80%93Box_test#:~:text=Ljung%20and%20George%20E.%20P.%20Box,series%20are%20different%20from%20zero.&amp;text=The%20Box%2DPierce%20test%20statistic,studies%20have%20shown%20poor%20performance.) e [portal action](http://www.portalaction.com.br/series-temporais/472-teste-de-ljung-box).
+
+
+
+---
+class: middle
+##Exemplo no R - Teste de Box-Pierce
+
+
+```r
+Box.test(residuals(arima(ts.sim, order=c(1,0,1))))
+```
+
+```
+## 
+## 	Box-Pierce test
+## 
+## data:  residuals(arima(ts.sim, order = c(1, 0, 1)))
+## X-squared = 0.91878, df = 1, p-value = 0.3378
+```
+
+---
+class: middle
+##Exemplo no R - Teste de Ljung-Box
+
+
+```r
+Box.test(residuals(arima(ts.sim, order=c(1,0,1))),
+         type="Ljung-Box")
+```
+
+```
+## 
+## 	Box-Ljung test
+## 
+## data:  residuals(arima(ts.sim, order = c(1, 0, 1)))
+## X-squared = 0.97503, df = 1, p-value = 0.3234
+```
+
+- Maiores detalhes da função podem ser vistos [aqui](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/box.test.html).
+---
+class: middle
+##Exemplo no R - ACF dos residuos 
+
+
+```r
+acf(residuals(arima(ts.sim, order=c(1,0,1))))
+```
+
+![](Aula_14_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Exemplo no R - PACF dos residuos 
+
+
+```r
+pacf(residuals(arima(ts.sim, order=c(1,0,1))))
+```
+
+![](Aula_14_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

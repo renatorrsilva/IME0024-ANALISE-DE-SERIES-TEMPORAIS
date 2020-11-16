@@ -457,7 +457,9 @@ ts(dat$ICV) %>% autoplot()
 ####Plotando a série usando a transformação logarítmica com uma diferença
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
- ts(diff(log(dat$ICV))) %>% autoplot()
+ #ts(diff(log(dat$ICV))) %>% autoplot() 
+
+plot(ts(diff(log(dat$ICV))),ylim=c(0,0.2))
 ```
 
 
@@ -465,7 +467,9 @@ ts(dat$ICV) %>% autoplot()
 ####Plotando a série usando a transformação logarítmica com duas diferenças
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
-ts(diff(log(dat$ICV), differences=2)) %>% autoplot()
+#ts(diff(log(dat$ICV), differences=2)) %>% autoplot()
+
+plot(ts(diff(log(dat$ICV), differences=2)),ylim=c(-0.2,0.2))
 ```
 
 ---

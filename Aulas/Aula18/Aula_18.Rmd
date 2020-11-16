@@ -1,0 +1,269 @@
+---
+title: "Aula 18 - Metodologia Box-Jenkins (parte 2)"
+subtitle: "Estimação e Diagnóstico do Modelo"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle, inverse, center
+##Estimação dos Parâmetros
+
+
+---
+class: middle
+##Estimação dos Parâmetros - Introdução
+
+- Uma vez que o modelo foi identificado, o próximo passo para a série temporal é estimar seus parâmetros.
+
+- Existem alguns métodos para isso: métodos dos momentos, mínimos quadrados e método da máxima verossimilhança.
+
+- Nesta aula, apresentaremos alguns aspectos do método da máxima verossimilhança no contexto de séries temporais. Mais precisamente, apresentaremos o método da máxima verossimilhança condicional.
+
+- Depois discutiremos brevemente quais métodos estão implementados no software R.
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Considere um modelo $ARMA(p,q)$
+
+$$\tilde{Z}_t = \phi_1 \tilde{Z}_{t-1} + \ldots + \phi_p \tilde{Z}_{t-p} + \ldots + a_t - \theta_1 a_{t-1} - \ldots - \theta_q a_{t-q},$$
+
+- A distribuição conjunta de $a_1, \ldots, a_n$ é dada por:
+
+$$f(a_1, \ldots, a_n) = \frac{1}{(2 \pi \sigma_a^2)^{\frac{n}{2}}} \exp\left\{-\frac{1}{2}\sum_{t=1}^n a_{t}^2 \right\}.$$
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Reescrevendo $a_i$ como:
+
+$$a_t = \tilde{Z}_t - \phi_1 \tilde{Z}_{t-1} - \ldots - \phi_p \tilde{Z}_{t-p} + \theta_1 a_{t-1} + \ldots + \theta_q a_{t-q},$$
+temos 
+
+$$l(\phi, \mu, \theta, \sigma_a^2) = -\frac{n}{2} \log{(2\pi\sigma_a^2)} - \frac{S(\phi, \mu, \theta)}{2 \sigma^2_a}.$$
+em que $l(\phi, \mu, \theta, \sigma_a^2)$ é o logaritmo da verossimilhança e
+
+$$S(\phi, \mu, \theta) = \sum_{t=1}^n (\tilde{Z}_t - \phi_1 \tilde{Z}_{t-1} - \ldots \phi_p \tilde{Z}_{t-p} + \theta_1 a_{t-1} + \ldots + \theta_q a_{t-q} )^2.$$   
+
+- As quantidades $\hat{\phi}, \hat{\mu}$ e $\hat{\theta}$ são chamadas estimadores de máxima verossimilhança.
+
+---
+class: middle
+##Método da Máxima Verossimilhança Condicional
+
+- Existem algumas alternativas para especificar as condições iniciais para $Z_t$ e $a_t$.
+
+- Baseando-se nas pressuposições de que a série seja estacionária e que a distribuição do ruído branco seja Gaussiana, 
+
+- Pode-se substituir $Z_t$ desconhecido por $\bar{Z}$ e $a_t$ por $E[a_t] = 0$.
+
+- Após estimar os parâmetros $\phi, \mu, \theta$ pode-se estimar o parâmetro $\sigma_a^2$,
+
+$$\hat{\sigma_a^2} = \frac{S(\hat{\phi}, \hat{\mu}, \hat{\theta})}{(n-p)-(p+q+1)}.$$
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+```
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+##Simulando um modelo ARIMA(1,0,1)
+set.seed(30)
+ts.sim <- arima.sim(list(order = c(1,0,1), ar = 0.8, ma=0.8), n = 50)
+##Plotando a série
+ts.sim %>% autoplot()
+```
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+```
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Simulando um modelo ARIMA(1,0,1)
+set.seed(30)
+ts.sim <- arima.sim(list(order = c(1,0,1), ar = 0.8, ma=0.8), n = 50)
+##Plotando a série
+ts.sim %>% autoplot()
+```
+
+
+---
+####Método da Máxima Verossimilhança Condicional - Código no R
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+##Estimando os parâmetros
+armacoeff <- function(x) {
+  l = length(x)
+  param=c(mu=0, phi=0, theta=0)
+  SSE <- function(param){
+    mu=param[1]
+    phi=param[2]
+    theta=param[3]
+    res = vector()
+    res[1] = 0
+    for(i in (2:l)){
+      res[i] = (x[i]-mu) - phi*(x[i-1]-mu) - theta*res[i-1]
+    }
+    return(sum(res*res))
+  }
+  bla = nlminb(objective=SSE, start= param)
+  return(bla)
+}
+armacoeff(as.vector(ts.sim))
+```
+
+**Código feito pelo Professor [Rob Hyndman](https://stats.stackexchange.com/questions/248276/maximum-likelihood-estimation-for-arma1-1-in-r)**.
+
+---
+##Método da Máxima Verossimilhança Condicional - Código no R
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Estimando os parâmetros
+armacoeff <- function(x) {
+  l = length(x)
+  param=c(mu=0, phi=0, theta=0)
+  SSE <- function(param){
+    mu=param[1]
+    phi=param[2]
+    theta=param[3]
+    res = vector()
+    res[1] = 0
+    for(i in (2:l)){
+      res[i] = (x[i]-mu) - phi*(x[i-1]-mu) -theta*res[i-1]
+    }
+    return(sum(res*res))
+  }
+  bla = nlminb(objective=SSE, start= param)
+  return(bla)
+}
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+armacoeff(as.vector(ts.sim))$par
+```
+
+```{r, warning=FALSE, message=FALSE}
+arima(ts.sim, order=c(1,0,1), method="CSS")
+```
+
+- O modelo usado para simulação é diferente do apresentado em aula,
+veja [aqui](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/arima)
+
+---
+#Implementação do método no R
+
+- Na literatura padrão de séries temporais, há um detalhamento muito maior do método da máxima verossimilhança com relação ao que foi apresentado aqui.
+
+- Entretanto, nenhum desses métodos apresentados nesses livros ou cursos tradicionais estão implementados no software R.
+
+- No software R, para estimação de parâmetros de modelos ARIMA(p,d,q) foi implementado o algoritmo AS 154, Gardner (1980).
+
+- As justificativas pela escolha desse algoritmo pode ser visto nesse [paper](https://www.r-project.org/doc/Rnews/Rnews_2002-2.pdf)
+
+- Detalhes da função arima podem ser vistos [aqui](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/arima).
+
+
+
+---
+class: middle, center, inverse
+##Diagnóstico do modelo
+
+
+---
+class: middle
+##Diagnóstico do modelo - Introdução (Portal Action e Morettin e Toloi 2004)
+
+- Após identificar e estimar o modelo é necessário verificar se ele representa, ou não, adequadamente os dados. 
+
+- A verificação do modelo pode ser feita analisando os resíduos. Suponha que o modelo ajustado seja da seguinte forma
+
+- Se o modelo estiver correto os resíduos exatos $a_t$ devem ser i.i.d com distrubuição $N(0,1)$.
+
+- Um método de verificar esta hipótese é verificar se os resíduos estimados do modelo são não correlacionados.
+
+---
+class: middle
+##Teste de Box-Pierce
+
+A hipótese nula do teste é que os resíduos são i.i.d e a hipótese alternativa é que os resíduos não são i.i.d. Calculamos uma estimativa de auto correlações por meio de:
+
+$$\hat{r}_k = \dfrac{\sum^n_{t = k+1} \hat{a}_t \hat{a}_{t-k}}{\sum^n_{t=1} \hat{a}^2_t}$$	
+é possível mostrar que $\hat{r}_k \sim N(0, \frac{1}{n})$. 
+
+Sob $H_0$, a estatística $Q(k) = n \sum^K_{j=1} \hat{r}^2_j$,
+terá aproximadamente uma distribuição $\chi^2$ com K graus de liberdade, onde K é o número de defasagens tomada na função de autocorrelação. 
+
+
+Portanto, rejeitamos a hipótese nula se $Q > \chi^2_{1 - \alpha, k}$ com um nível de significância $\alpha$ [portal action](http://www.portalaction.com.br/series-temporais/471-teste-de-box-pierce).
+
+---
+class: middle
+##Teste de Ljung Box
+
+As hipóteses do teste são as mesmas do teste anterior. Calculamos as estimativas de autocorrelações por:
+
+$$\hat{r}_k = \dfrac{\sum^n_{t = k+1} \hat{a}_t \hat{a}_{t-k}}{\sum^n_{t=1} \hat{a}^2_t}.$$	
+É possível mostrar que $\hat{r}_k \sim N(0, \frac{1}{n}).$ 
+
+
+Se o modelo for apropriado, a estatística do teste
+$$Q(k) = n(n-2) \sum^K_{j=1} \frac{\hat{r}^2_j}{(n-j)}$$	
+terá aproximadamente uma distribuição $\chi^2$ com (K - p - q) graus de liberdade, onde K é o número de defasagens tomada na função de autocorrelação, p e q são as ordens do modelo ajustado. Portanto, rejeitamos a hipótese nula se $Q >\chi^2_{1 - \alpha, k-p-q}$ com um nível de significância $\alpha$ [wiki](https://en.wikipedia.org/wiki/Ljung%E2%80%93Box_test#:~:text=Ljung%20and%20George%20E.%20P.%20Box,series%20are%20different%20from%20zero.&text=The%20Box%2DPierce%20test%20statistic,studies%20have%20shown%20poor%20performance.) e [portal action](http://www.portalaction.com.br/series-temporais/472-teste-de-ljung-box).
+
+
+
+---
+class: middle
+##Exemplo no R - Teste de Box-Pierce
+
+```{r, warning=FALSE, message=FALSE}
+Box.test(residuals(arima(ts.sim, order=c(1,0,1))))
+```
+
+---
+class: middle
+##Exemplo no R - Teste de Ljung-Box
+
+```{r, warning=FALSE, message=FALSE}
+Box.test(residuals(arima(ts.sim, order=c(1,0,1))),
+         type="Ljung-Box")
+```
+
+- Maiores detalhes da função podem ser vistos [aqui](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/box.test.html).
+---
+class: middle
+##Exemplo no R - ACF dos residuos 
+
+```{r, warning=FALSE, message=FALSE}
+acf(residuals(arima(ts.sim, order=c(1,0,1))))
+```
+
+---
+class: middle
+##Exemplo no R - PACF dos residuos 
+
+```{r, warning=FALSE, message=FALSE}
+pacf(residuals(arima(ts.sim, order=c(1,0,1))))
+```
