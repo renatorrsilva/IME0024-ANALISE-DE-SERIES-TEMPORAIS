@@ -1,0 +1,487 @@
+---
+title: "Estudo de Caso 1"
+subtitle: ""
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre séries temporais.
+
+- Além disso, faremos uma complementação da teoria explicando como se faz previsão.
+
+---
+class: middle, inverse, center
+
+##Conjunto de dados 1: Monóxido de Carbono
+
+
+
+---
+class: middle, inverse, center
+##Análise Exploratória da Série
+
+---
+class: middle
+###Gráfico da Série
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+library(ggfortify)
+library(ggpmisc)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+theme_set(theme_bw())
+
+dat = read.csv("Poluicao.csv", header = TRUE)
+
+co = ts(dat$co[1:357], start = c(1997,1), frequency = 365)
+
+co %>% autoplot()
+
+```
+
+####Possível heterogeneidade de Variância !!!
+
+---
+class: middle
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+hist(co)
+
+```
+
+####Dados assimétricos !!!
+
+---
+class: middle
+###Gráfico da Série - Dados Transformados
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+log(co) %>% autoplot()
+
+```
+
+---
+class: middle
+###Histograma - Dados Transformados
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+hist(log(co))
+
+```
+
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Dados Transformados
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+acf(log(co), lag.max=60)
+```
+
+
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+pacf(log(co), lag.max=60)
+```
+
+
+
+---
+class: middle, inverse, center
+##Metodologia Box Jenkins
+
+
+
+---
+class: middle
+##Identificação: Primeiro Modelo Proposto
+
+$$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3 )Z_t = a_t$$
+```{r, eval= FALSE, message=FALSE, warning=FALSE}
+
+coT = log(co)
+
+mod1 =  Arima(coT,
+             order = c(3,0,0))
+
+summary(mod1)
+
+
+```
+
+
+---
+class: middle
+###Estimação dos Parâmetros
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+coT = log(co)
+
+mod1 =  Arima(coT,
+             order = c(3,0,0))
+
+summary(mod1)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod1,plot = FALSE)
+
+```
+
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod1)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod1),lag.max=30)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod1),lag.max=30)
+
+```
+
+
+
+
+---
+class: middle
+##Identificação: 
+
+$$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3)Z_t = (1- \theta_{21}B^{21})a_t$$
+
+```{r, eval= FALSE, message=FALSE, warning=FALSE}
+
+mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,NA,NA))
+                                             
+                                            
+```
+
+
+---
+class: middle
+###Estimação dos Parâmetros
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,NA,NA))
+                                             
+
+summary(mod2)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod2,plot = FALSE)
+
+```
+
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+checkresiduals(mod2)
+
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+acf(residuals(mod2),lag.max=30)
+
+```
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+pacf(residuals(mod2),lag.max=30)
+
+```
+
+
+
+---
+class: middle, inverse, center
+##Método Automático de Seleção de Modelos
+
+---
+####Algoritmo Hyndman-Khandakar implementado na função [`auto.arima()`](https://www.researchgate.net/publication/222105759_Automatic_Time_Series_Forecasting_The_forecast_Package_for_R)
+
+1.  O número de diferenças $0 \leq d \leq 2$ é determinada usando o teste KPSS.
+
+2.  Os valores de $p$ e $q$ são então escolhidos para minimizar o AICc após diferenciar os dados $d$ vezes.
+
+  a.  Para 4 modelos iniciais:
+      - $ARIMA(0,d,0)$ 
+      - $ARIMA(2,d,2)$ 
+      - $ARIMA(1,d,0)$ 
+      - $ARIMA(0,d,1)$ 
+     
+      Uma constante é incluída exceto se $d=2$. Se $d \leq 1$, um modelo adicional é incluído sem a constante.
+      
+  b.   O modelo com menor AICc é escolhido como "melhor modelo atual"
+  
+  c.   Variações no atual modelo são consideradas
+      - variar $p$ e/ou $q$ a partir do modelo atual $\pm 1$
+      - incluir ou excluir a constante do modelo
+      O modelo com menor AICc torna-se o "melhor modelo atual"
+      
+  d. Repete-se os passo 2 c até não encontrar modelo com menor AICc.
+  
+  
+---
+class: middle, inverse, center
+##Previsão dos modelos
+
+
+---
+class: middle
+##Previsão dos modelos (Rob Hyndman)
+
+###Modelo [ARIMA](https://otexts.com/fpp2/arima-forecasting.html)
+
+- As previsões pontuais de um processo ARIMA  podem ser calculadas usando as três etapas a seguir.
+
+1.  Faça a expansão do modelo ARIMA tal que $Z_t$ esteja no lado esquerdo e todos os outros termos estejam no lado direito.
+
+2.  Rescreva a equação substituindo $t$ por $t+h$ em que $h$ é denominado horizonte de previsão.
+
+3.  No lado direito da equação, substitua as observações futuras por suas previsões, os erros futuros por zero e os erros passados pelos resíduos correspondentes.
+
+- Começando com $h=1$, essas etapas são repetidas para $h = 2,3, \ldots$ até todas previsões serem calculadas.
+
+
+---
+class: middle
+##Previsão dos modelos
+
+Exemplo: ARIMA(3,1,1)
+
+\begin{align}
+(1 - \phi_1 B - \phi_2 B^2 - \phi_3 B^3)(1 - B)Z_t = (1 - \theta_1 B)a_t
+\end{align}
+
+Então
+
+\begin{align}
+(1 - \phi_1 B - \phi_2 B^2 - \phi_3 B^3)(1 - B)Z_{t+h} = (1 - \theta_1 B)a_{t+h} 
+\end{align}
+ou seja, 
+
+\begin{align}
+Z_{t+h} = (1  + \phi_1) Z_{t+h-1} - (\phi_1 - \phi_2) Z_{t+h-2} - (\phi_2 - \phi_3) Z_{t+h-3} - \phi_3 Z_{t+h-4} + a_{t+h} - \theta_1 a_{t+h-1}
+\end{align}
+
+Assim,
+
+\begin{align}
+Z_{t+1} =& (1 + \phi_1) Z_t -  (\phi_1 - \phi_2) Z_{t-1} - (\phi_2 - \phi_3) Z_{t-2} - \phi_3 Z_{t-3}  - \theta_1 a_{t} \\
+Z_{t+2} =& (1 + \phi_1) Z_t -  (\phi_1 - \phi_2) Z_{t} - (\phi_2 - \phi_3) Z_{t-1} - \phi_3 Z_{t-2}  
+Z_{t+3} =& (1+\phi_1)Z_{t+h-1} - (\phi_1 - \phi_2)Z_{t+h-2} - (\phi_2 - \phi_3)Z_{t+h-3} - \phi_3 Z_{t+h-4}, \phantom{11} h\geq 5.
+\end{align}
+
+
+- Métodos de previsão intervalar podem ser vistos em [Brockwell e Davis 2006](https://www.amazon.com/dp/3319298526/ref=cm_sw_su_dp?tag=otexts-20).
+
+
+
+---
+class: middle, inverse, center
+##Erros de previsão e medidas de acurácia
+
+---
+class: middle
+##Erros de previsão [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Um “erro” de previsão é a diferença entre um valor observado e sua previsão.
+
+$$e_{t+h} = Z_{t+h} - \hat{Z}_{t+h}$$
+Observe que os erros de previsão são diferentes dos resíduos de duas maneiras. Primeiro, os resíduos são calculados no conjunto de treinamento, enquanto os erros de previsão são calculados no conjunto de teste. 
+
+Podemos medir a precisão da previsão resumindo os erros de previsão 
+de diferentes maneiras.
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+As duas medidas dependentes de escala mais comumente usadas são baseadas 
+nos erros absolutos ou erros quadrados:
+
+####Erro absoluto médio
+
+$$\mbox{MAE} = \mbox{mean}(|e_t|)$$
+
+####Raiz do erro quadrático médio
+
+$$\mbox{RMSE} = \sqrt{\mbox{mean}(e_t^2)}$$
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Os erros de porcentagem têm a vantagem de não possuírem unidades e, portanto, são freqüentemente usados para comparar desempenhos de previsão entre conjuntos de dados.
+
+
+
+####Erro Absoluto Médio Percentual
+
+$$\mbox{MAPE} = \mbox{mean}\left(\frac{100e_t}{Z_t}\right)$$
+
+####Erro Absoluto Médio Percentual Escalonado
+
+- Para comparar séries com diferentes unidades.
+
+$$q_j = \frac{e_j}{\frac{1}{N-1}\sum_{t=2}^N|Z_t - Z_{t-1}|},$$
+
+$$\mbox{MASE} = mean(|q_j|).$$
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+
+mod.auto =  auto.arima(co, lambda=1, trace=TRUE)
+  
+mod.auto
+
+```
+
+
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+
+forecast(mod.auto, h=12, biasadj=TRUE) %>% autoplot() 
+
+```
+
+
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+
+mod.auto =  auto.arima(co, lambda=0)
+  
+summary(mod.auto)
+
+```
+
+---
+class: middle
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+forecast(mod.auto, h=60, biasadj=TRUE) %>% autoplot() 
+
+```
+
+
+---
+class: middle
+##Acurácia - Modelo Morettin 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+mod.auto2 = auto.arima(co[1:353], lambda=0)
+
+accuracy(forecast(mod.auto2, h=12,biasadj=TRUE), co[354:365])
+
+```

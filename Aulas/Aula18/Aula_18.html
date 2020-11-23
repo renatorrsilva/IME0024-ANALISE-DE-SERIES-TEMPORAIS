@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Aula 14 - Metodologia Box-Jenkins (parte 2)</title>
+    <title>Aula 18 - Metodologia Box-Jenkins (parte 2)</title>
     <meta charset="utf-8" />
     <meta name="author" content="Renato Rodrigues Silva" />
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
@@ -11,11 +11,11 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Aula 14 - Metodologia Box-Jenkins (parte 2)
+# Aula 18 - Metodologia Box-Jenkins (parte 2)
 ## Estimação e Diagnóstico do Modelo
 ### Renato Rodrigues Silva
 ### Universidade Federal de Goiás.
-### (updated: 2020-08-07)
+### (updated: 2020-11-16)
 
 ---
 
@@ -85,6 +85,9 @@ class: middle
 ##Carregando as bibliotecas
 library(tidyverse)
 library(forecast)
+library(httr)
+library(xlsx)
+library(ggfortify)
 ```
 
 
@@ -101,7 +104,7 @@ ts.sim %&gt;% autoplot()
 
 
 
-![](Aula_14_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+![](Aula_18_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -278,7 +281,7 @@ class: middle
 acf(residuals(arima(ts.sim, order=c(1,0,1))))
 ```
 
-![](Aula_14_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+![](Aula_18_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
 
 ---
 class: middle
@@ -289,7 +292,13 @@ class: middle
 pacf(residuals(arima(ts.sim, order=c(1,0,1))))
 ```
 
-![](Aula_14_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+![](Aula_18_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Outro Exemplo 
+
+![](Aula_18_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

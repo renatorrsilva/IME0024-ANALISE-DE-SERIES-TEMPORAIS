@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Estudo de Caso 1</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Estudo de Caso 1
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-11-23)
+
+---
+
+class: middle
+##Introdução
+
+- Nessa aula, faremos alguns exercícios sobre séries temporais.
+
+- Além disso, faremos uma complementação da teoria explicando como se faz previsão.
+
+---
+class: middle, inverse, center
+
+##Conjunto de dados 1: Monóxido de Carbono
+
+
+
+---
+class: middle, inverse, center
+##Análise Exploratória da Série
+
+---
+class: middle
+###Gráfico da Série
+
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+####Possível heterogeneidade de Variância !!!
+
+---
+class: middle
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+####Dados assimétricos !!!
+
+---
+class: middle
+###Gráfico da Série - Dados Transformados
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Histograma - Dados Transformados
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##Gráfico de Autocorrelação - Dados Transformados
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##Gráfico de Autocorrelação Parcial - Série Original
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle, inverse, center
+##Metodologia Box Jenkins
+
+
+
+---
+class: middle
+##Identificação: Primeiro Modelo Proposto
+
+`$$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3 )Z_t = a_t$$`
+
+```r
+coT = log(co)
+
+mod1 =  Arima(coT,
+             order = c(3,0,0))
+
+summary(mod1)
+```
+
+
+---
+class: middle
+###Estimação dos Parâmetros
+
+
+```
+## Series: coT 
+## ARIMA(3,0,0) with non-zero mean 
+## 
+## Coefficients:
+##          ar1      ar2     ar3    mean
+##       0.7211  -0.2739  0.1740  1.2237
+## s.e.  0.0521   0.0629  0.0522  0.0428
+## 
+## sigma^2 estimated as 0.09562:  log likelihood=-85.84
+## AIC=181.69   AICc=181.86   BIC=201.08
+## 
+## Training set error measures:
+##                       ME      RMSE       MAE       MPE     MAPE MASE
+## Training set 0.001676929 0.3074925 0.2436662 -8.861864 24.75987  NaN
+##                     ACF1
+## Training set -0.01041177
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(3,0,0) with non-zero mean
+## Q* = 133.85, df = 67, p-value = 2.324e-06
+## 
+## Model df: 4.   Total lags used: 71
+```
+
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(3,0,0) with non-zero mean
+## Q* = 133.85, df = 67, p-value = 2.324e-06
+## 
+## Model df: 4.   Total lags used: 71
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle
+##Identificação: 
+
+`$$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3)Z_t = (1- \theta_{21}B^{21})a_t$$`
+
+
+```r
+mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,0,
+                                             0,0,NA,NA))
+```
+
+
+---
+class: middle
+###Estimação dos Parâmetros
+
+
+```
+## Series: coT 
+## ARIMA(3,0,21) with non-zero mean 
+## 
+## Coefficients:
+##          ar1      ar2     ar3  ma1  ma2  ma3  ma4  ma5  ma6  ma7  ma8  ma9
+##       0.7146  -0.2899  0.1790    0    0    0    0    0    0    0    0    0
+## s.e.  0.0521   0.0627  0.0522    0    0    0    0    0    0    0    0    0
+##       ma10  ma11  ma12  ma13  ma14  ma15  ma16  ma17  ma18  ma19  ma20    ma21
+##          0     0     0     0     0     0     0     0     0     0     0  0.1577
+## s.e.     0     0     0     0     0     0     0     0     0     0     0  0.0478
+##         mean
+##       1.2213
+## s.e.  0.0462
+## 
+## sigma^2 estimated as 0.09294:  log likelihood=-80.51
+## AIC=173.02   AICc=173.26   BIC=196.29
+## 
+## Training set error measures:
+##                       ME      RMSE       MAE       MPE     MAPE MASE
+## Training set 0.002385887 0.3027137 0.2391982 -8.534006 24.20445  NaN
+##                      ACF1
+## Training set -0.008993213
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(3,0,21) with non-zero mean
+## Q* = 113.27, df = 46, p-value = 1.338e-07
+## 
+## Model df: 25.   Total lags used: 71
+```
+
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação 
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(3,0,21) with non-zero mean
+## Q* = 113.27, df = 46, p-value = 1.338e-07
+## 
+## Model df: 25.   Total lags used: 71
+```
+
+
+---
+class: middle
+###Diagnóstico: Autocorrelação
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+###Diagnóstico: Autocorrelação Parcial 
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle, inverse, center
+##Método Automático de Seleção de Modelos
+
+---
+####Algoritmo Hyndman-Khandakar implementado na função [`auto.arima()`](https://www.researchgate.net/publication/222105759_Automatic_Time_Series_Forecasting_The_forecast_Package_for_R)
+
+1.  O número de diferenças `\(0 \leq d \leq 2\)` é determinada usando o teste KPSS.
+
+2.  Os valores de `\(p\)` e `\(q\)` são então escolhidos para minimizar o AICc após diferenciar os dados `\(d\)` vezes.
+
+  a.  Para 4 modelos iniciais:
+      - `\(ARIMA(0,d,0)\)` 
+      - `\(ARIMA(2,d,2)\)` 
+      - `\(ARIMA(1,d,0)\)` 
+      - `\(ARIMA(0,d,1)\)` 
+     
+      Uma constante é incluída exceto se `\(d=2\)`. Se `\(d \leq 1\)`, um modelo adicional é incluído sem a constante.
+      
+  b.   O modelo com menor AICc é escolhido como "melhor modelo atual"
+  
+  c.   Variações no atual modelo são consideradas
+      - variar `\(p\)` e/ou `\(q\)` a partir do modelo atual `\(\pm 1\)`
+      - incluir ou excluir a constante do modelo
+      O modelo com menor AICc torna-se o "melhor modelo atual"
+      
+  d. Repete-se os passo 2 c até não encontrar modelo com menor AICc.
+  
+  
+---
+class: middle, inverse, center
+##Previsão dos modelos
+
+
+---
+class: middle
+##Previsão dos modelos (Rob Hyndman)
+
+###Modelo [ARIMA](https://otexts.com/fpp2/arima-forecasting.html)
+
+- As previsões pontuais de um processo ARIMA  podem ser calculadas usando as três etapas a seguir.
+
+1.  Faça a expansão do modelo ARIMA tal que `\(Z_t\)` esteja no lado esquerdo e todos os outros termos estejam no lado direito.
+
+2.  Rescreva a equação substituindo `\(t\)` por `\(t+h\)` em que `\(h\)` é denominado horizonte de previsão.
+
+3.  No lado direito da equação, substitua as observações futuras por suas previsões, os erros futuros por zero e os erros passados pelos resíduos correspondentes.
+
+- Começando com `\(h=1\)`, essas etapas são repetidas para `\(h = 2,3, \ldots\)` até todas previsões serem calculadas.
+
+
+---
+class: middle
+##Previsão dos modelos
+
+Exemplo: ARIMA(3,1,1)
+
+`\begin{align}
+(1 - \phi_1 B - \phi_2 B^2 - \phi_3 B^3)(1 - B)Z_t = (1 - \theta_1 B)a_t
+\end{align}`
+
+Então
+
+`\begin{align}
+(1 - \phi_1 B - \phi_2 B^2 - \phi_3 B^3)(1 - B)Z_{t+h} = (1 - \theta_1 B)a_{t+h} 
+\end{align}`
+ou seja, 
+
+`\begin{align}
+Z_{t+h} = (1  + \phi_1) Z_{t+h-1} - (\phi_1 - \phi_2) Z_{t+h-2} - (\phi_2 - \phi_3) Z_{t+h-3} - \phi_3 Z_{t+h-4} + a_{t+h} - \theta_1 a_{t+h-1}
+\end{align}`
+
+Assim,
+
+`\begin{align}
+Z_{t+1} =&amp; (1 + \phi_1) Z_t -  (\phi_1 - \phi_2) Z_{t-1} - (\phi_2 - \phi_3) Z_{t-2} - \phi_3 Z_{t-3}  - \theta_1 a_{t} \\
+Z_{t+2} =&amp; (1 + \phi_1) Z_t -  (\phi_1 - \phi_2) Z_{t} - (\phi_2 - \phi_3) Z_{t-1} - \phi_3 Z_{t-2}  
+Z_{t+3} =&amp; (1+\phi_1)Z_{t+h-1} - (\phi_1 - \phi_2)Z_{t+h-2} - (\phi_2 - \phi_3)Z_{t+h-3} - \phi_3 Z_{t+h-4}, \phantom{11} h\geq 5.
+\end{align}`
+
+
+- Métodos de previsão intervalar podem ser vistos em [Brockwell e Davis 2006](https://www.amazon.com/dp/3319298526/ref=cm_sw_su_dp?tag=otexts-20).
+
+
+
+---
+class: middle, inverse, center
+##Erros de previsão e medidas de acurácia
+
+---
+class: middle
+##Erros de previsão [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Um “erro” de previsão é a diferença entre um valor observado e sua previsão.
+
+`$$e_{t+h} = Z_{t+h} - \hat{Z}_{t+h}$$`
+Observe que os erros de previsão são diferentes dos resíduos de duas maneiras. Primeiro, os resíduos são calculados no conjunto de treinamento, enquanto os erros de previsão são calculados no conjunto de teste. 
+
+Podemos medir a precisão da previsão resumindo os erros de previsão 
+de diferentes maneiras.
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+As duas medidas dependentes de escala mais comumente usadas são baseadas 
+nos erros absolutos ou erros quadrados:
+
+####Erro absoluto médio
+
+`$$\mbox{MAE} = \mbox{mean}(|e_t|)$$`
+
+####Raiz do erro quadrático médio
+
+`$$\mbox{RMSE} = \sqrt{\mbox{mean}(e_t^2)}$$`
+
+---
+class: middle
+##Medidas de Acurácia  [(Rob Hyndman)](https://otexts.com/fpp2/non-seasonal-arima.html)
+
+Os erros de porcentagem têm a vantagem de não possuírem unidades e, portanto, são freqüentemente usados para comparar desempenhos de previsão entre conjuntos de dados.
+
+
+
+####Erro Absoluto Médio Percentual
+
+`$$\mbox{MAPE} = \mbox{mean}\left(\frac{100e_t}{Z_t}\right)$$`
+
+####Erro Absoluto Médio Percentual Escalonado
+
+- Para comparar séries com diferentes unidades.
+
+`$$q_j = \frac{e_j}{\frac{1}{N-1}\sum_{t=2}^N|Z_t - Z_{t-1}|},$$`
+
+`$$\mbox{MASE} = mean(|q_j|).$$`
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+
+```r
+mod.auto =  auto.arima(co, lambda=1, trace=TRUE)
+  
+mod.auto
+```
+
+
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+
+```r
+forecast(mod.auto, h=12, biasadj=TRUE) %&gt;% autoplot() 
+```
+
+
+
+---
+###Ajuste algoritmo `auto.arima()`
+
+
+
+```
+## Series: co 
+## ARIMA(2,1,1) 
+## Box Cox transformation: lambda= 0 
+## 
+## Coefficients:
+##          ar1      ar2      ma1
+##       0.6224  -0.2214  -0.9484
+## s.e.  0.0535   0.0531   0.0179
+## 
+## sigma^2 estimated as 0.09488:  log likelihood=-85.26
+## AIC=178.53   AICc=178.64   BIC=194.03
+## 
+## Training set error measures:
+##                     ME     RMSE       MAE       MPE     MAPE MASE      ACF1
+## Training set 0.1860875 1.181265 0.8842001 -3.862307 25.32309  NaN 0.1151386
+```
+
+---
+class: middle
+##Previsão dos modelos - Modelo `auto.arima()`
+
+
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Acurácia - Modelo Morettin 
+
+
+```
+##                     ME      RMSE       MAE       MPE      MAPE      MASE
+## Training set 0.1849287 1.1869894 0.8905249 -3.989024 25.514082 0.9397580
+## Test set     0.2269837 0.4237313 0.3488270  5.521486  9.290634 0.3681121
+##                   ACF1
+## Training set 0.1158706
+## Test set            NA
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
