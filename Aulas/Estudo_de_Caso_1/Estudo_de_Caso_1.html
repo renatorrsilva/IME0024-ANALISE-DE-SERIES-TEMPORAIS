@@ -53,19 +53,7 @@ class: middle
 
 ####Dados assimétricos !!!
 
----
-class: middle
-###Gráfico da Série - Dados Transformados
 
-
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
-
----
-class: middle
-###Histograma - Dados Transformados
-
-
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
 
 
 
@@ -73,7 +61,7 @@ class: middle
 class: middle
 ##Gráfico de Autocorrelação - Dados Transformados
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
 
 
 
@@ -81,7 +69,7 @@ class: middle
 class: middle
 ##Gráfico de Autocorrelação Parcial - Série Original
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
 
 
 
@@ -98,10 +86,8 @@ class: middle
 `$$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3 )Z_t = a_t$$`
 
 ```r
-coT = log(co)
-
-mod1 =  Arima(coT,
-             order = c(3,0,0))
+mod1 =  Arima(co,
+             order = c(3,0,0), lambda="auto")
 
 summary(mod1)
 ```
@@ -113,22 +99,23 @@ class: middle
 
 
 ```
-## Series: coT 
+## Series: co 
 ## ARIMA(3,0,0) with non-zero mean 
+## Box Cox transformation: lambda= -0.3662844 
 ## 
 ## Coefficients:
 ##          ar1      ar2     ar3    mean
-##       0.7211  -0.2739  0.1740  1.2237
-## s.e.  0.0521   0.0629  0.0522  0.0428
+##       0.6912  -0.2508  0.1541  0.9625
+## s.e.  0.0517   0.0617  0.0519  0.0258
 ## 
-## sigma^2 estimated as 0.09562:  log likelihood=-85.84
-## AIC=181.69   AICc=181.86   BIC=201.08
+## sigma^2 estimated as 0.04069:  log likelihood=68.15
+## AIC=-126.29   AICc=-126.13   BIC=-106.79
 ## 
 ## Training set error measures:
-##                       ME      RMSE       MAE       MPE     MAPE MASE
-## Training set 0.001676929 0.3074925 0.2436662 -8.861864 24.75987  NaN
-##                     ACF1
-## Training set -0.01041177
+##                     ME     RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.2565169 1.237546 0.8984977 -2.886212 25.11942 0.9627535
+##                   ACF1
+## Training set 0.1971942
 ```
 
 
@@ -142,9 +129,9 @@ class: middle
 ## 	Ljung-Box test
 ## 
 ## data:  Residuals from ARIMA(3,0,0) with non-zero mean
-## Q* = 133.85, df = 67, p-value = 2.324e-06
+## Q* = 8.9305, df = 6, p-value = 0.1775
 ## 
-## Model df: 4.   Total lags used: 71
+## Model df: 4.   Total lags used: 10
 ```
 
 
@@ -153,16 +140,16 @@ class: middle
 class: middle
 ###Diagnóstico: Autocorrelação 
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
 
 ```
 ## 
 ## 	Ljung-Box test
 ## 
 ## data:  Residuals from ARIMA(3,0,0) with non-zero mean
-## Q* = 133.85, df = 67, p-value = 2.324e-06
+## Q* = 8.9305, df = 6, p-value = 0.1775
 ## 
-## Model df: 4.   Total lags used: 71
+## Model df: 4.   Total lags used: 10
 ```
 
 
@@ -170,14 +157,14 @@ class: middle
 class: middle
 ###Diagnóstico: Autocorrelação
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
 
 
 ---
 class: middle
 ###Diagnóstico: Autocorrelação Parcial
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
 
 
 
@@ -190,7 +177,7 @@ class: middle
 
 
 ```r
-mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+mod2=  Arima(co, order = c(3,0,21), lambda = "auto", fixed=c(NA,NA, NA, 
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
@@ -207,28 +194,29 @@ class: middle
 
 
 ```
-## Series: coT 
+## Series: co 
 ## ARIMA(3,0,21) with non-zero mean 
+## Box Cox transformation: lambda= -0.3662844 
 ## 
 ## Coefficients:
 ##          ar1      ar2     ar3  ma1  ma2  ma3  ma4  ma5  ma6  ma7  ma8  ma9
-##       0.7146  -0.2899  0.1790    0    0    0    0    0    0    0    0    0
-## s.e.  0.0521   0.0627  0.0522    0    0    0    0    0    0    0    0    0
+##       0.6865  -0.2631  0.1573    0    0    0    0    0    0    0    0    0
+## s.e.  0.0517   0.0616  0.0519    0    0    0    0    0    0    0    0    0
 ##       ma10  ma11  ma12  ma13  ma14  ma15  ma16  ma17  ma18  ma19  ma20    ma21
-##          0     0     0     0     0     0     0     0     0     0     0  0.1577
-## s.e.     0     0     0     0     0     0     0     0     0     0     0  0.0478
+##          0     0     0     0     0     0     0     0     0     0     0  0.1657
+## s.e.     0     0     0     0     0     0     0     0     0     0     0  0.0477
 ##         mean
-##       1.2213
-## s.e.  0.0462
+##       0.9604
+## s.e.  0.0284
 ## 
-## sigma^2 estimated as 0.09294:  log likelihood=-80.51
-## AIC=173.02   AICc=173.26   BIC=196.29
+## sigma^2 estimated as 0.03943:  log likelihood=74.1
+## AIC=-136.19   AICc=-135.96   BIC=-112.79
 ## 
 ## Training set error measures:
-##                       ME      RMSE       MAE       MPE     MAPE MASE
-## Training set 0.002385887 0.3027137 0.2391982 -8.534006 24.20445  NaN
-##                      ACF1
-## Training set -0.008993213
+##                     ME     RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.2513274 1.222026 0.8811875 -2.707896 24.58215 0.9442054
+##                   ACF1
+## Training set 0.1843559
 ```
 
 
@@ -241,9 +229,9 @@ class: middle
 ## 	Ljung-Box test
 ## 
 ## data:  Residuals from ARIMA(3,0,21) with non-zero mean
-## Q* = 113.27, df = 46, p-value = 1.338e-07
+## Q* = 35.207, df = 3, p-value = 1.102e-07
 ## 
-## Model df: 25.   Total lags used: 71
+## Model df: 25.   Total lags used: 28
 ```
 
 
@@ -252,16 +240,16 @@ class: middle
 class: middle
 ###Diagnóstico: Autocorrelação 
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
 
 ```
 ## 
 ## 	Ljung-Box test
 ## 
 ## data:  Residuals from ARIMA(3,0,21) with non-zero mean
-## Q* = 113.27, df = 46, p-value = 1.338e-07
+## Q* = 35.207, df = 3, p-value = 1.102e-07
 ## 
-## Model df: 25.   Total lags used: 71
+## Model df: 25.   Total lags used: 28
 ```
 
 
@@ -269,14 +257,13 @@ class: middle
 class: middle
 ###Diagnóstico: Autocorrelação
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
 
 ---
 class: middle
 ###Diagnóstico: Autocorrelação Parcial 
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
-
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
 
 
 
@@ -449,16 +436,16 @@ forecast(mod.auto, h=12, biasadj=TRUE) %&gt;% autoplot()
 ## Box Cox transformation: lambda= 0 
 ## 
 ## Coefficients:
-##          ar1      ar2      ma1
-##       0.6224  -0.2214  -0.9484
-## s.e.  0.0535   0.0531   0.0179
+##         ar1      ar2      ma1
+##       0.619  -0.2174  -0.9480
+## s.e.  0.053   0.0525   0.0177
 ## 
-## sigma^2 estimated as 0.09488:  log likelihood=-85.26
-## AIC=178.53   AICc=178.64   BIC=194.03
+## sigma^2 estimated as 0.09493:  log likelihood=-87.3
+## AIC=182.6   AICc=182.71   BIC=198.19
 ## 
 ## Training set error measures:
-##                     ME     RMSE       MAE       MPE     MAPE MASE      ACF1
-## Training set 0.1860875 1.181265 0.8842001 -3.862307 25.32309  NaN 0.1151386
+##                     ME     RMSE      MAE       MPE     MAPE      MASE      ACF1
+## Training set 0.1748797 1.173613 0.876995 -4.225622 25.38911 0.9397131 0.1171969
 ```
 
 ---
@@ -466,7 +453,7 @@ class: middle
 ##Previsão dos modelos - Modelo `auto.arima()`
 
 
-![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+![](Estudo_de_Caso_1_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
 
 
 ---
@@ -475,9 +462,9 @@ class: middle
 
 
 ```
-##                     ME      RMSE       MAE       MPE      MAPE      MASE
-## Training set 0.1849287 1.1869894 0.8905249 -3.989024 25.514082 0.9397580
-## Test set     0.2269837 0.4237313 0.3488270  5.521486  9.290634 0.3681121
+##                      ME      RMSE       MAE        MPE     MAPE      MASE
+## Training set  0.1849287 1.1869894 0.8905249  -3.989024 25.51408 0.9397580
+## Test set     -0.4835298 0.8769417 0.6941795 -26.336230 31.82030 0.7325576
 ##                   ACF1
 ## Training set 0.1158706
 ## Test set            NA

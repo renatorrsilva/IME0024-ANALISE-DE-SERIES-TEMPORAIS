@@ -52,7 +52,7 @@ theme_set(theme_bw())
 
 dat = read.csv("Poluicao.csv", header = TRUE)
 
-co = ts(dat$co[1:357], start = c(1997,1), frequency = 365)
+co = ts(dat$co)
 
 co %>% autoplot()
 
@@ -71,27 +71,7 @@ hist(co)
 
 ####Dados assimétricos !!!
 
----
-class: middle
-###Gráfico da Série - Dados Transformados
 
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-
-log(co) %>% autoplot()
-
-```
-
----
-class: middle
-###Histograma - Dados Transformados
-
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-
-hist(log(co))
-
-```
 
 
 
@@ -101,7 +81,7 @@ class: middle
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-acf(log(co), lag.max=60)
+acf(co, lag.max=60)
 ```
 
 
@@ -112,7 +92,7 @@ class: middle
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-pacf(log(co), lag.max=60)
+pacf(co, lag.max=60)
 ```
 
 
@@ -130,10 +110,10 @@ class: middle
 $$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3 )Z_t = a_t$$
 ```{r, eval= FALSE, message=FALSE, warning=FALSE}
 
-coT = log(co)
 
-mod1 =  Arima(coT,
-             order = c(3,0,0))
+
+mod1 =  Arima(co,
+             order = c(3,0,0), lambda="auto")
 
 summary(mod1)
 
@@ -147,9 +127,8 @@ class: middle
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
-coT = log(co)
 
-mod1 =  Arima(coT,
+mod1 =  Arima(co, lambda="auto",
              order = c(3,0,0))
 
 summary(mod1)
@@ -175,7 +154,7 @@ class: middle
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
-checkresiduals(mod1)
+checkresiduals(mod1, lag=12)
 
 ```
 
@@ -212,14 +191,15 @@ $$(1 - \phi_1B - \phi_2B^2 - \phi_3B^3)Z_t = (1- \theta_{21}B^{21})a_t$$
 
 ```{r, eval= FALSE, message=FALSE, warning=FALSE}
 
-mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+mod2=  Arima(co, order = c(3,0,21), include.mean = FALSE,
+             lambda = "auto", fixed=c(NA,NA, NA, 
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
-                                             0,0,NA,NA))
+                                             0,0,NA))
                                              
                                             
 ```
@@ -231,7 +211,7 @@ class: middle
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
-mod2=  Arima(coT, order = c(3,0,21), fixed=c(NA,NA, NA, 
+mod2=  Arima(co, order = c(3,0,21), lambda = "auto", fixed=c(NA,NA, NA, 
                                              0,0,0,
                                              0,0,0,
                                              0,0,0,
@@ -480,7 +460,7 @@ class: middle
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
-mod.auto2 = auto.arima(co[1:353], lambda=0)
+mod.auto2 = auto.arima(co, lambda="auto")
 
 accuracy(forecast(mod.auto2, h=12,biasadj=TRUE), co[354:365])
 
