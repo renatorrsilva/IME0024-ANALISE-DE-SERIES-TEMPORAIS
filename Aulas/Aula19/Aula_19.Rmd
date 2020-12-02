@@ -1,0 +1,611 @@
+---
+title: "Aula 19 - Modelos Sazonais"
+subtitle: "Material fortemente baseado no livro de Morettin e Toloi (2004)"
+author: "Renato Rodrigues Silva"
+institute: "Universidade Federal de Goiás."
+date: "(updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+    
+---
+class: middle
+##Introdução
+
+- Na aula 4, estudamos o problema da sazonalidade e os procedimentos de estimação e eliminação da componente sazonal determinística de uma série temporal.
+
+- É possível que mesmo após eliminar a componente sazonal determinística, ainda reste correlação significativa em:
+
+a. "lags" de baixa ordem, indicando que os resíduos ainda são correlacionados podendo-se ajustá-los através de um modelo ARIMA, por exemplo: 
+
+b.  "lags" sazonais, isto é, múltiplos de período $s$. Isto significa que há necessidade de se considerar uma sazonaliade estocástica, ou seja, ajustar à série original um modelo ARIMA sazonal (SARIMA).
+
+---
+class: middle
+##Sazonalidade determinística
+
+Um modelo que pode ser útil para modelar sazonalidade determinística é dado por:
+
+$$Z_t = \mu_t + N_t,$$
+em que $\mu_t$ é uma função determinística periódica, satisfazendo $\mu_t - \mu_{t-12} = 0,$ ou 
+
+$$(1 - B^{12}) \mu_t = 0$$
+e $N_t$ é um processo estacionário que pode ser modelado por um $ARMA(p,q).$
+
+---
+class: middle
+##Sazonalidade determinística
+
+- Dessa maneira, $N_t$ satisfaz à equação
+
+$$\phi(B) N_t = \theta(B) a_t,$$
+em que $a_t$ é um ruído branco e $\mu_t$ tem solução dada por:
+
+$$\mu_t = \mu + \sum_{j=1}^6\left[\alpha_j \cos\left(\frac{2\pi j t}{12}\right) + \beta_j\sin\left(\frac{2\pi j t}{12}\right) \right],$$
+com $\mu, \alpha_j, \beta_j, j = 1, \ldots, 6,$ constantes desconhecidas.
+
+---
+class: middle
+##Sazonalidade determinística
+
+- Assim, para um modelo sazonal determinístico, aplicando a diferença sazonal $(1 - B^{12})$ à expressão obtemos:
+
+\begin{align}
+(1 - B^{12}) Z_t =& (1 - B^{12}) \mu_t + (1 - B^{12}) N_t \\
+(1 - B^{12}) Z_t =& (1 - B^{12}) N_t.
+\end{align}
+
+Substituindo $\phi(B)N_t = \theta(B) a_t$ na ultima expressão, temos:
+
+\begin{align}
+\phi(B)(1 - B^{12}) Z_t = \theta(B)(1 - B^{12}) a_t \\
+\phi(B)W_t = \theta(B)(1 - B^{12} )a_t,
+\end{align}
+em que $W_t  = (1 - B^12) Z_t.$
+---
+class: middle
+##Identificação do Modelo
+
+- A identificação é feita em dois passos:
+
+1.  Obtemos estimativas preliminares de $\mu, \alpha, \beta$ por meio de uma análise de regressão de $Z_t$ sobre as variáveis sazonais
+
+2. Calculamos os resíduos
+$$\tilde{N}_t = Z_t - \tilde{\mu} -  \sum_{j=1}^6\left[\tilde{\alpha}_j \cos\left(\frac{2\pi j t}{12}\right) + \tilde{\beta}_j\sin\left(\frac{2\pi j t}{12}\right) \right]$$
+e examinamos os resíduos as funções de autocorrelação e autocorrelação parcial para identificar um modelo $ARMA(p,q)$ para $N_t$.
+
+- A estimação pode ser feita por meio do método da máxima verossimilhança.
+
+
+---
+class: middle
+##Exemplo prático no R
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+url1 = 'https://www.ime.usp.br/~pam/OZONIO.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$Ozonio, frequency = 12, start=1956 ) %>% autoplot()
+```
+
+- Série de valores mensais de ozônio em Azuza, Califórnia, de janeiro 
+
+---
+class: middle
+##Exemplo prático no R
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+url1 = 'https://www.ime.usp.br/~pam/OZONIO.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$Ozonio, frequency = 12, start=1956 ) %>% autoplot()
+```
+
+
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+```{r, eval = FALSE, warning=FALSE, message=FALSE}
+##Fazendo analise de regressão com variáveis sazonais
+times= 1:nrow(dat)
+mod = lm(Ozonio ~ cos(2*pi*times/12) + sin(2*pi*times/12)+
+           cos(2*pi*times/6) + sin(2*pi*times/6) +
+           cos(2*pi*times/4) + sin(2*pi*times/4)+
+            cos(2*pi*times/3) + sin(2*pi*times/3)+
+            cos(2*pi*5*times/12) + sin(2*pi*5*times/12)+
+             cos(pi*times) + sin(pi*times)
+           , data=dat)
+
+summary(mod)$coefficients
+
+
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Fazendo analise de regressão com variáveis sazonais
+times= 1:nrow(dat)
+mod = lm(Ozonio ~ cos(2*pi*times/12) + sin(2*pi*times/12)+
+           cos(2*pi*times/6) + sin(2*pi*times/6) +
+           cos(2*pi*times/4) + sin(2*pi*times/4)+
+            cos(2*pi*times/3) + sin(2*pi*times/3)+
+            cos(2*pi*5*times/12) + sin(2*pi*5*times/12)+
+             cos(pi*times) + sin(pi*times)
+           , data=dat)
+round(summary(mod)$coefficients,2)
+
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Modelo Escolhido
+times= 1:nrow(dat)
+mod2 = lm(Ozonio ~ cos(2*pi*times/12) + sin(2*pi*times/12)+
+           cos(2*pi*times/6) + sin(2*pi*times/6), data=dat)
+round(summary(mod2)$coefficients,2)
+
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+##Modelo Escolhido
+times = 1:nrow(dat)
+mod2 = lm(Ozonio ~ cos(2*pi*times/12) + sin(2*pi*times/12)+
+           cos(2*pi*times/6) + sin(2*pi*times/6), data=dat)
+round(summary(mod2)$coefficients,2)
+
+```
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+##Identificar modelo ARIMA nos residuos
+acf(residuals(mod2))
+
+pacf(residuals(mod2))
+
+```
+
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Identificar modelo ARIMA nos residuos
+acf(residuals(mod2))
+
+
+
+```
+
+---
+class: middle
+####Exemplo prático no R - Passo 2
+
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Identificar modelo ARIMA nos residuos
+pacf(residuals(mod2))
+
+
+
+```
+
+- Devido ao comportamento da facp (somente $\phi_{11} \neq 0$), escolhe-se ajustar um modelo AR(1) aos resíduos
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+##Identificar modelo ARIMA nos residuos
+arima(residuals(mod2), order = c(1,0,0))
+
+##Teste de Ljung-Box
+Box.test(residuals(arima(residuals(mod2), order = c(1,0,0))),lag=1,"Ljung")
+
+```
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Identificar modelo ARIMA nos residuos
+arima(residuals(mod2), order = c(1,0,0))
+
+##Teste de Ljung-Box
+Box.test(residuals(arima(residuals(mod2), order = c(1,0,0))),lag=1,"Ljung")
+
+```
+
+---
+class: middle
+##Exemplo prático no R 
+
+- É possível fazer os dois passos em uma única vez ajustando um modelo de regressão em que os erros seguem um processo ARIMA(p,d,q).
+
+$$Z_t = \beta_0 + \beta_1 x_1 + \beta_r x_r + \eta_t$$
+em que $\eta_t$ segue um processo ARIMA(p,d,q).
+
+```{r, eval=FALSE, warning =FALSE, message = FALSE}
+
+X = cbind(
+  x1 = cos(2*pi*times/12),
+  x2 = sin(2*pi*times/12),
+  x3 = cos(2*pi*times/6),
+  x4 = sin(2*pi*times/6)
+)
+
+
+fit <- Arima(ts(dat$Ozonio, frequency = 12, start=1956 ),
+             xreg=X, order=c(1,0,0))
+summary(fit)
+```
+
+
+---
+class: middle
+##Exemplo prático no R 
+
+
+```{r, echo=FALSE, warning =FALSE, message = FALSE}
+
+X = cbind(
+  x1 = cos(2*pi*times/12),
+  x2 = sin(2*pi*times/12),
+  x3 = cos(2*pi*times/6),
+  x4 = sin(2*pi*times/6)
+)
+
+
+fit <- Arima(ts(dat$Ozonio, frequency = 12, start=1956 ),
+             xreg=X, order=c(1,0,0))
+summary(fit)
+```
+
+- para fazer previsão veja isso [aqui](https://stackoverflow.com/questions/56132175/how-do-you-forecast-arima-with-multiple-regressors)
+
+
+---
+class: middle
+##Sazonalidade estocástica
+
+- Seja o modelo, $Z_t = \mu_t + N_t.$ Considere agora que $\mu_t$ seja um processo estocástico satisfazendo $(1 - B^{12})\mu_t = Y_t$, em que $Y_t$ é um processo estacionário.
+
+- Aplicando o operador $(1 - B^{12})$ temos:
+
+\begin{align}
+(1 - B^{12})Z_t =& (1 - B^{12})\mu_t + (1 - B^{12})N_t \\
+=& Y_t + (1 - B^{12})N_t.
+\end{align}
+em que $\phi_Y(B)Y_t = \theta_Y(B)a_t$ e $\phi_N(B)N_t = \theta_N(B)\epsilon_t.$
+
+
+---
+class: middle
+##Sazonalidade estocástica
+
+Pode-se demonstrar que a expressão $(1 - B^{12})Z_t = Y_t + (1 - B^{12})N_t$ é equivalente à 
+
+$$(1 - \phi_1 B^{12} - \ldots - \phi_p B^{12 P})(1 - B^{12})^D Z_t = 
+(1 - \Theta_1 B^{12} - \ldots - \Theta_Q B^{12 Q})\alpha_t$$
+ou
+
+$$\Phi(B^{12})\Delta^{D}_{12} Z_t = \Theta(B^{12})\alpha_t.$$
+em que
+
+$\Phi(B^{12}) = 1-\Phi_1 B^{12} - \ldots - \Phi_P B^{12 P}$ é o operador auto-regressivo sazonal de ordem $P$, estacionário;
+
+$\Theta(B^{12}) = 1-\Theta_1 B^{12} - \ldots - \theta_P B^{12 Q}$ é o operador de médias móveis sazonal de ordem $Q$, estacionário;
+
+$\Delta_{12}^B = (1 - B^{12})^D$ é o operador de diferenças sazonal sendo $D$ o número de diferenças sazonais.
+
+$\alpha_t$ pode ser eventualmente ruído branco, neste caso a fac do processo $Z_t$ é zero para todos os "lags" não sazonais. 
+
+---
+class: middle
+##Sazonalidade estocástica
+
+- Suponha, agora que o processo $\left\{ \alpha_t \right\}$ satisfaça um modelo ARIMA(p,d,q)
+  
+$$\varphi(B)\alpha_t = \theta(B)a_t,$$
+em que $\varphi(B) = (1 - B)^d\phi(B)$ e $a_t$ é um processo de ruído branco.
+
+- Então, demonstra-se que $Z_t$ satisfaz o modelo
+  
+$$\phi(B)\Phi(B^{12})(1 - B^{12})^D(1 - B)^dZ_t = \theta(B)\Theta(B^{12})a_t,$$
+em que $\theta(B) = 1  - \theta_1 B - \ldots - \theta_q B^q,$ $\phi(B) = 1 - \phi_1 B - \ldots - \phi_p B^p.$
+
+- O modelo é denominado ARIMA *sazonal multiplicativo* (SARIMA) de ordem $(p,d,q) \times (P,Q,D)_{12}.$
+
+---
+class: middle
+##Identificação, estimação e verificação
+
+- Não há, em princípio, nenhuma dificuldade adicional na identificação, estimação e verificação de modelos sazonais.
+
+- A diferença é que temos que diferençar a série com respeito a $\Delta$ e $\Delta^{12}$ (casos de séries mensais) a fim de produzir estacionariedade.
+
+- Depois, inspecionamos as fac e facp amostrais da série adequadamente diferençada  nos "lags" $1,2,3, \ldots$ para obter valores de $p$ e $q$ e nos "lags" $12, 24, 36, \ldots$ para obter valores de $P$ e $Q$, selecionando-se, desse modo, um modelo tentativo.
+
+- Em seguida, estimamos os parâmetros e fazemos diagnóstico do modelo da forma usual.
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+- Precipitação atmosférica em Lavras, MG; observações mensais de janeiro de 1966 a dezembro de 1997.
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE}
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$Precipitação, frequency = 12, start=1966 ) %>% autoplot()
+
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf <- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1)) %>% slice(1:372)
+ts(dat$Precipitação, frequency = 12, start=1966 ) %>% autoplot()
+
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação
+acf(dat$Precipitação, lag=36)
+
+##Função de Autocorrelação Parcial
+pacf(dat$Precipitação, lag=36)
+
+
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação
+acf(dat$Precipitação, lag=36)
+
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação Parcial
+pacf(dat$Precipitação, lag=36)
+
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação
+acf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+
+##Função de Autocorrelação Parcial
+pacf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+
+
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação
+acf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+```
+
+
+---
+class: middle
+####Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação Parcial
+pacf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+```
+
+- Modelo inicial $SARIMA_{12}(0,0,0)\times(0,1,1)$ (Segundo Morettin)
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, eval= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação Parcial
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
+
+summary(mod)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo= FALSE, warning=FALSE, message=FALSE}
+##Função de Autocorrelação Parcial
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
+
+summary(mod)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+acf(mod$residuals)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+pacf(mod$residuals)
+```
+
+- Modelo proposto não está ok.
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, eval=FALSE,warning=FALSE, message=FALSE}
+auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal = T)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal=T)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, warning=FALSE, message=FALSE}
+
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0))
+
+
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+acf(mod$residuals)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+pacf(mod$residuals)
+```
+
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, eval=FALSE,warning=FALSE, message=FALSE}
+checkresiduals(mod,  plot=  TRUE)
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+checkresiduals(mod,  plot=  TRUE)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+##Considerações Finais
+
+- O modelo automático ainda não está ok para todos os testes
+- Na próxima aula, vamos propor alguns modelos e verificar quais deles fornece melhor previsão.
+
+
