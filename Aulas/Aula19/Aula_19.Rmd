@@ -514,29 +514,7 @@ class: middle
 pacf(mod$residuals)
 ```
 
-- Modelo proposto não está ok.
 
----
-class: middle
-##Sazonalidade estocástica - Exemplo no R
-
-```{r, eval=FALSE,warning=FALSE, message=FALSE}
-auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal = T)
-```
-
----
-class: middle
-##Sazonalidade estocástica - Exemplo no R
-
-
-
----
-class: middle
-##Sazonalidade estocástica - Exemplo no R
-
-```{r, echo=FALSE,warning=FALSE, message=FALSE}
-auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal=T)
-```
 
 
 ---
@@ -545,7 +523,14 @@ class: middle
 
 ```{r, warning=FALSE, message=FALSE}
 
-mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,1), seasonal = c(2,1,0))
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , 
+            order = c(15,0,0), seasonal = c(0,1,1),
+                                  fixed= c(NA,0,0,
+                                       0,0,0,
+                                       0,0,NA,
+                                       0,0,0,
+                                       0,0,NA,
+                                       NA))
 
 
 ```
@@ -603,9 +588,21 @@ checkresiduals(mod,  plot=  FALSE)
 
 
 ---
-##Considerações Finais
+class: middle
+##Sazonalidade estocástica - (automatico)
 
-- O modelo automático ainda não está ok para todos os testes
-- Na próxima aula, vamos propor alguns modelos e verificar quais deles fornece melhor previsão.
+```{r, warning=FALSE, message=FALSE}
+mod = auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal=T)
+```
 
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
+
+checkresiduals(mod,  plot=  FALSE)
+```
 

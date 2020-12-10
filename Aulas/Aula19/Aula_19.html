@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Aula 19 - Modelos Sazonais</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Renato Rodrigues Silva" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Aula 19 - Modelos Sazonais
+## Material fortemente baseado no livro de Morettin e Toloi (2004)
+### Renato Rodrigues Silva
+### Universidade Federal de Goiás.
+### (updated: 2020-12-02)
+
+---
+
+class: middle
+##Introdução
+
+- Na aula 4, estudamos o problema da sazonalidade e os procedimentos de estimação e eliminação da componente sazonal determinística de uma série temporal.
+
+- É possível que mesmo após eliminar a componente sazonal determinística, ainda reste correlação significativa em:
+
+a. "lags" de baixa ordem, indicando que os resíduos ainda são correlacionados podendo-se ajustá-los através de um modelo ARIMA, por exemplo: 
+
+b.  "lags" sazonais, isto é, múltiplos de período `\(s\)`. Isto significa que há necessidade de se considerar uma sazonaliade estocástica, ou seja, ajustar à série original um modelo ARIMA sazonal (SARIMA).
+
+---
+class: middle
+##Sazonalidade determinística
+
+Um modelo que pode ser útil para modelar sazonalidade determinística é dado por:
+
+`$$Z_t = \mu_t + N_t,$$`
+em que `\(\mu_t\)` é uma função determinística periódica, satisfazendo `\(\mu_t - \mu_{t-12} = 0,\)` ou 
+
+`$$(1 - B^{12}) \mu_t = 0$$`
+e `\(N_t\)` é um processo estacionário que pode ser modelado por um `\(ARMA(p,q).\)`
+
+---
+class: middle
+##Sazonalidade determinística
+
+- Dessa maneira, `\(N_t\)` satisfaz à equação
+
+`$$\phi(B) N_t = \theta(B) a_t,$$`
+em que `\(a_t\)` é um ruído branco e `\(\mu_t\)` tem solução dada por:
+
+`$$\mu_t = \mu + \sum_{j=1}^6\left[\alpha_j \cos\left(\frac{2\pi j t}{12}\right) + \beta_j\sin\left(\frac{2\pi j t}{12}\right) \right],$$`
+com `\(\mu, \alpha_j, \beta_j, j = 1, \ldots, 6,\)` constantes desconhecidas.
+
+---
+class: middle
+##Sazonalidade determinística
+
+- Assim, para um modelo sazonal determinístico, aplicando a diferença sazonal `\((1 - B^{12})\)` à expressão obtemos:
+
+`\begin{align}
+(1 - B^{12}) Z_t =&amp; (1 - B^{12}) \mu_t + (1 - B^{12}) N_t \\
+(1 - B^{12}) Z_t =&amp; (1 - B^{12}) N_t.
+\end{align}`
+
+Substituindo `\(\phi(B)N_t = \theta(B) a_t\)` na ultima expressão, temos:
+
+`\begin{align}
+\phi(B)(1 - B^{12}) Z_t = \theta(B)(1 - B^{12}) a_t \\
+\phi(B)W_t = \theta(B)(1 - B^{12} )a_t,
+\end{align}`
+em que `\(W_t  = (1 - B^12) Z_t.\)`
+---
+class: middle
+##Identificação do Modelo
+
+- A identificação é feita em dois passos:
+
+1.  Obtemos estimativas preliminares de `\(\mu, \alpha, \beta\)` por meio de uma análise de regressão de `\(Z_t\)` sobre as variáveis sazonais
+
+2. Calculamos os resíduos
+`$$\tilde{N}_t = Z_t - \tilde{\mu} -  \sum_{j=1}^6\left[\tilde{\alpha}_j \cos\left(\frac{2\pi j t}{12}\right) + \tilde{\beta}_j\sin\left(\frac{2\pi j t}{12}\right) \right]$$`
+e examinamos os resíduos as funções de autocorrelação e autocorrelação parcial para identificar um modelo `\(ARMA(p,q)\)` para `\(N_t\)`.
+
+- A estimação pode ser feita por meio do método da máxima verossimilhança.
+
+
+---
+class: middle
+##Exemplo prático no R
+
+
+```r
+##Carregando as bibliotecas
+library(tidyverse)
+library(forecast)
+library(httr)
+library(xlsx)
+url1 = 'https://www.ime.usp.br/~pam/OZONIO.XLS'
+a = GET(url1, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$Ozonio, frequency = 12, start=1956 ) %&gt;% autoplot()
+```
+
+- Série de valores mensais de ozônio em Azuza, Califórnia, de janeiro 
+
+---
+class: middle
+##Exemplo prático no R
+
+![](Aula_19_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+
+```r
+##Fazendo analise de regressão com variáveis sazonais
+times= 1:nrow(dat)
+mod = lm(Ozonio ~ cos(2*pi*times/12) + sin(2*pi*times/12)+
+           cos(2*pi*times/6) + sin(2*pi*times/6) +
+           cos(2*pi*times/4) + sin(2*pi*times/4)+
+            cos(2*pi*times/3) + sin(2*pi*times/3)+
+            cos(2*pi*5*times/12) + sin(2*pi*5*times/12)+
+             cos(pi*times) + sin(pi*times)
+           , data=dat)
+
+summary(mod)$coefficients
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+
+```
+##                                 Estimate   Std. Error t value Pr(&gt;|t|)
+## (Intercept)                 5.080000e+00 7.000000e-02   69.76     0.00
+## cos(2 * pi * times/12)     -2.010000e+00 1.000000e-01  -19.52     0.00
+## sin(2 * pi * times/12)     -1.550000e+00 1.000000e-01  -15.04     0.00
+## cos(2 * pi * times/6)      -2.700000e-01 1.000000e-01   -2.60     0.01
+## sin(2 * pi * times/6)       5.300000e-01 1.000000e-01    5.10     0.00
+## cos(2 * pi * times/4)      -3.000000e-02 1.000000e-01   -0.32     0.75
+## sin(2 * pi * times/4)      -2.000000e-02 1.000000e-01   -0.16     0.87
+## cos(2 * pi * times/3)      -1.800000e-01 1.000000e-01   -1.77     0.08
+## sin(2 * pi * times/3)       1.400000e-01 1.000000e-01    1.38     0.17
+## cos(2 * pi * 5 * times/12)  7.000000e-02 1.000000e-01    0.64     0.53
+## sin(2 * pi * 5 * times/12) -2.000000e-02 1.000000e-01   -0.24     0.81
+## cos(pi * times)            -9.000000e-02 9.000000e-02   -1.07     0.29
+## sin(pi * times)            -5.846825e+12 4.228203e+12   -1.38     0.17
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+
+```
+##                        Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept)                5.08       0.07   70.03     0.00
+## cos(2 * pi * times/12)    -2.01       0.10  -19.58     0.00
+## sin(2 * pi * times/12)    -1.55       0.10  -15.11     0.00
+## cos(2 * pi * times/6)     -0.26       0.10   -2.57     0.01
+## sin(2 * pi * times/6)      0.53       0.10    5.12     0.00
+```
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 1
+
+
+
+```
+##                        Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept)                5.08       0.07   70.03     0.00
+## cos(2 * pi * times/12)    -2.01       0.10  -19.58     0.00
+## sin(2 * pi * times/12)    -1.55       0.10  -15.11     0.00
+## cos(2 * pi * times/6)     -0.26       0.10   -2.57     0.01
+## sin(2 * pi * times/6)      0.53       0.10    5.12     0.00
+```
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+
+```r
+##Identificar modelo ARIMA nos residuos
+acf(residuals(mod2))
+
+pacf(residuals(mod2))
+```
+
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+![](Aula_19_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+####Exemplo prático no R - Passo 2
+
+
+![](Aula_19_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+- Devido ao comportamento da facp (somente `\(\phi_{11} \neq 0\)`), escolhe-se ajustar um modelo AR(1) aos resíduos
+
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+
+
+```r
+##Identificar modelo ARIMA nos residuos
+arima(residuals(mod2), order = c(1,0,0))
+
+##Teste de Ljung-Box
+Box.test(residuals(arima(residuals(mod2), order = c(1,0,0))),lag=1,"Ljung")
+```
+
+---
+class: middle
+##Exemplo prático no R - Passo 2
+
+
+```
+## 
+## Call:
+## arima(x = residuals(mod2), order = c(1, 0, 0))
+## 
+## Coefficients:
+##          ar1  intercept
+##       0.1548    -0.0011
+## s.e.  0.0736     0.0835
+## 
+## sigma^2 estimated as 0.8985:  log likelihood = -245.79,  aic = 497.57
+```
+
+```
+## 
+## 	Box-Ljung test
+## 
+## data:  residuals(arima(residuals(mod2), order = c(1, 0, 0)))
+## X-squared = 0.057996, df = 1, p-value = 0.8097
+```
+
+---
+class: middle
+##Exemplo prático no R 
+
+- É possível fazer os dois passos em uma única vez ajustando um modelo de regressão em que os erros seguem um processo ARIMA(p,d,q).
+
+`$$Z_t = \beta_0 + \beta_1 x_1 + \beta_r x_r + \eta_t$$`
+em que `\(\eta_t\)` segue um processo ARIMA(p,d,q).
+
+
+```r
+X = cbind(
+  x1 = cos(2*pi*times/12),
+  x2 = sin(2*pi*times/12),
+  x3 = cos(2*pi*times/6),
+  x4 = sin(2*pi*times/6)
+)
+
+
+fit &lt;- Arima(ts(dat$Ozonio, frequency = 12, start=1956 ),
+             xreg=X, order=c(1,0,0))
+summary(fit)
+```
+
+
+---
+class: middle
+##Exemplo prático no R 
+
+
+
+```
+## Series: ts(dat$Ozonio, frequency = 12, start = 1956) 
+## Regression with ARIMA(1,0,0) errors 
+## 
+## Coefficients:
+##          ar1  intercept       x1       x2       x3      x4
+##       0.1548     5.0783  -2.0105  -1.5501  -0.2651  0.5253
+## s.e.  0.0736     0.0835   0.1147   0.1149   0.1071  0.1072
+## 
+## sigma^2 estimated as 0.9295:  log likelihood=-245.79
+## AIC=505.57   AICc=506.22   BIC=527.92
+## 
+## Training set error measures:
+##                       ME      RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.000818783 0.9478836 0.7457779 -4.774838 17.26296 0.7003392
+##                     ACF1
+## Training set -0.01779807
+```
+
+- para fazer previsão veja isso [aqui](https://stackoverflow.com/questions/56132175/how-do-you-forecast-arima-with-multiple-regressors)
+
+
+---
+class: middle
+##Sazonalidade estocástica
+
+- Seja o modelo, `\(Z_t = \mu_t + N_t.\)` Considere agora que `\(\mu_t\)` seja um processo estocástico satisfazendo `\((1 - B^{12})\mu_t = Y_t\)`, em que `\(Y_t\)` é um processo estacionário.
+
+- Aplicando o operador `\((1 - B^{12})\)` temos:
+
+`\begin{align}
+(1 - B^{12})Z_t =&amp; (1 - B^{12})\mu_t + (1 - B^{12})N_t \\
+=&amp; Y_t + (1 - B^{12})N_t.
+\end{align}`
+em que `\(\phi_Y(B)Y_t = \theta_Y(B)a_t\)` e `\(\phi_N(B)N_t = \theta_N(B)\epsilon_t.\)`
+
+
+---
+class: middle
+##Sazonalidade estocástica
+
+Pode-se demonstrar que a expressão `\((1 - B^{12})Z_t = Y_t + (1 - B^{12})N_t\)` é equivalente à 
+
+`$$(1 - \phi_1 B^{12} - \ldots - \phi_p B^{12 P})(1 - B^{12})^D Z_t = 
+(1 - \Theta_1 B^{12} - \ldots - \Theta_Q B^{12 Q})\alpha_t$$`
+ou
+
+`$$\Phi(B^{12})\Delta^{D}_{12} Z_t = \Theta(B^{12})\alpha_t.$$`
+em que
+
+`\(\Phi(B^{12}) = 1-\Phi_1 B^{12} - \ldots - \Phi_P B^{12 P}\)` é o operador auto-regressivo sazonal de ordem `\(P\)`, estacionário;
+
+`\(\Theta(B^{12}) = 1-\Theta_1 B^{12} - \ldots - \theta_P B^{12 Q}\)` é o operador de médias móveis sazonal de ordem `\(Q\)`, estacionário;
+
+`\(\Delta_{12}^B = (1 - B^{12})^D\)` é o operador de diferenças sazonal sendo `\(D\)` o número de diferenças sazonais.
+
+`\(\alpha_t\)` pode ser eventualmente ruído branco, neste caso a fac do processo `\(Z_t\)` é zero para todos os "lags" não sazonais. 
+
+---
+class: middle
+##Sazonalidade estocástica
+
+- Suponha, agora que o processo `\(\left\{ \alpha_t \right\}\)` satisfaça um modelo ARIMA(p,d,q)
+  
+`$$\varphi(B)\alpha_t = \theta(B)a_t,$$`
+em que `\(\varphi(B) = (1 - B)^d\phi(B)\)` e `\(a_t\)` é um processo de ruído branco.
+
+- Então, demonstra-se que `\(Z_t\)` satisfaz o modelo
+  
+`$$\phi(B)\Phi(B^{12})(1 - B^{12})^D(1 - B)^dZ_t = \theta(B)\Theta(B^{12})a_t,$$`
+em que `\(\theta(B) = 1  - \theta_1 B - \ldots - \theta_q B^q,\)` `\(\phi(B) = 1 - \phi_1 B - \ldots - \phi_p B^p.\)`
+
+- O modelo é denominado ARIMA *sazonal multiplicativo* (SARIMA) de ordem `\((p,d,q) \times (P,Q,D)_{12}.\)`
+
+---
+class: middle
+##Identificação, estimação e verificação
+
+- Não há, em princípio, nenhuma dificuldade adicional na identificação, estimação e verificação de modelos sazonais.
+
+- A diferença é que temos que diferençar a série com respeito a `\(\Delta\)` e `\(\Delta^{12}\)` (casos de séries mensais) a fim de produzir estacionariedade.
+
+- Depois, inspecionamos as fac e facp amostrais da série adequadamente diferençada  nos "lags" `\(1,2,3, \ldots\)` para obter valores de `\(p\)` e `\(q\)` e nos "lags" `\(12, 24, 36, \ldots\)` para obter valores de `\(P\)` e `\(Q\)`, selecionando-se, desse modo, um modelo tentativo.
+
+- Em seguida, estimamos os parâmetros e fazemos diagnóstico do modelo da forma usual.
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+- Precipitação atmosférica em Lavras, MG; observações mensais de janeiro de 1966 a dezembro de 1997.
+
+
+```r
+url1 = 'https://www.ime.usp.br/~pam/LAVRAS.XLS'
+a = GET(url1, write_disk(tf &lt;- tempfile(fileext = ".xls")))
+dat =  as_tibble(read.xlsx(tf, sheetIndex = 1))
+ts(dat$Precipitação, frequency = 12, start=1966 ) %&gt;% autoplot()
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+
+![](Aula_19_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+
+```r
+##Função de Autocorrelação
+acf(dat$Precipitação, lag=36)
+
+##Função de Autocorrelação Parcial
+pacf(dat$Precipitação, lag=36)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+![](Aula_19_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+![](Aula_19_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+
+```r
+##Função de Autocorrelação
+acf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+
+##Função de Autocorrelação Parcial
+pacf(diff(dat$Precipitação, differences=1, lag=12), lag=36)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+![](Aula_19_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+####Sazonalidade estocástica - Exemplo no R (Seguindo o livro)
+
+![](Aula_19_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+
+- Modelo inicial `\(SARIMA_{12}(0,0,0)\times(0,1,1)\)` (Segundo Morettin)
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```r
+##Função de Autocorrelação Parcial
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , order = c(0,0,0), seasonal = c(0,1,1), include.drift = FALSE)
+
+summary(mod)
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```
+## Series: ts(dat$Precipitação, frequency = 12, start = 1966) 
+## ARIMA(0,0,0)(0,1,1)[12] 
+## 
+## Coefficients:
+##          sma1
+##       -1.0000
+## s.e.   0.0602
+## 
+## sigma^2 estimated as 6038:  log likelihood=-2097.95
+## AIC=4199.91   AICc=4199.94   BIC=4207.68
+## 
+## Training set error measures:
+##                    ME     RMSE      MAE  MPE MAPE      MASE       ACF1
+## Training set 1.243987 76.33282 52.23838 -Inf  Inf 0.6623725 -0.1044542
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+![](Aula_19_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+![](Aula_19_files/figure-html/unnamed-chunk-25-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+```r
+mod = Arima(ts(dat$Precipitação, frequency = 12, start=1966 ) , 
+            order = c(15,0,0), seasonal = c(0,1,1),
+                                  fixed= c(NA,0,0,
+                                       0,0,0,
+                                       0,0,NA,
+                                       0,0,0,
+                                       0,0,NA,
+                                       NA))
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+![](Aula_19_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+![](Aula_19_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+
+```r
+checkresiduals(mod,  plot=  TRUE)
+
+checkresiduals(mod,  plot=  FALSE)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+![](Aula_19_files/figure-html/unnamed-chunk-30-1.png)&lt;!-- --&gt;
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(15,0,0)(0,1,1)[12]
+## Q* = 11.254, df = 8, p-value = 0.1877
+## 
+## Model df: 16.   Total lags used: 24
+```
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(15,0,0)(0,1,1)[12]
+## Q* = 11.254, df = 8, p-value = 0.1877
+## 
+## Model df: 16.   Total lags used: 24
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - (automatico)
+
+
+```r
+mod = auto.arima(ts(dat$Precipitação, frequency = 12, start=1966 ), seasonal=T)
+```
+
+
+---
+class: middle
+##Sazonalidade estocástica - Exemplo no R
+
+
+
+```
+## 
+## 	Ljung-Box test
+## 
+## data:  Residuals from ARIMA(0,0,1)(2,1,0)[12] with drift
+## Q* = 31.184, df = 20, p-value = 0.05281
+## 
+## Model df: 4.   Total lags used: 24
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
